@@ -49,28 +49,164 @@
             .replace(/[^a-z0-9\-_]+/g, "");
     }
 
-    function buildMarkdown(courseEntry, courseId) {
-        if (!courseEntry || !courseEntry.forms.length) {
-            return "";
+    function parseCookieKey(key) {
+        var prefix = "noodle_";
+        if (!key || key.indexOf(prefix) !== 0) {
+            return null;
         }
-        var courseName = courseEntry.courseName || ("Course " + courseId);
-        var lines = ["# " + courseName, ""];
-        for (var i = 0; i < courseEntry.forms.length; i++) {
-            var form = courseEntry.forms[i];
-            if (!form) {
+        var remainder = key.substring(prefix.length);
+        if (!remainder) {
+            return null;
+        }
+        var lastUnderscore = remainder.lastIndexOf("_");
+        if (lastUnderscore === -1) {
+            return {
+                sectionId: decodeURIComponent(remainder),
+                courseId: ""
+            };
+        }
+        var sectionPart = remainder.substring(0, lastUnderscore);
+        var coursePart = remainder.substring(lastUnderscore + 1);
+        return {
+            sectionId: decodeURIComponent(sectionPart),
+            courseId: decodeURIComponent(coursePart)
+        };
+    }
+
+    function getAllNoodleCookies() {
+        if (!document.cookie) {
+            return [];
+        }
+        var pieces = document.cookie.split(";");
+        var entries = [];
+        for (var i = 0; i < pieces.length; i++) {
+            var raw = pieces[i];
+            if (!raw) {
                 continue;
             }
-            var sectionId = form.getAttribute("data-sectionid") || ("section-" + (i + 1));
-            var sectionTitle = form.getAttribute("data-sectiontitle") || form.getAttribute("data-sectionname");
-            var heading = "## " + (sectionTitle || sectionId);
+            var trimmed = raw.trim();
+            var eqIndex = trimmed.indexOf("=");
+            if (eqIndex === -1) {
+                continue;
+            }
+            var key = trimmed.substring(0, eqIndex);
+            if (key.indexOf("noodle_") !== 0) {
+                continue;
+            }
+            var value = trimmed.substring(eqIndex + 1);
+            var parsedKey = parseCookieKey(key);
+            if (!parsedKey) {
+                continue;
+            }
+            var parsedValue = parseSavedValue(value);
+            entries.push({
+                courseId: parsedKey.courseId || "",
+                sectionId: parsedKey.sectionId || "",
+                data: parsedValue
+            });
+        }
+        return entries;
+    }
+
+    function collectCourseNotes(courseId) {
+        var sections = {};
+        var sectionOrder = [];
+        var allCookies = getAllNoodleCookies();
+        var courseName = "";
+        for (var i = 0; i < allCookies.length; i++) {
+            var entry = allCookies[i];
+            if ((entry.courseId || "") !== courseId) {
+                continue;
+            }
+            var sectionId = entry.sectionId;
+            if (!sectionId) {
+                continue;
+            }
+            if (!sections[sectionId]) {
+                sections[sectionId] = {
+                    id: sectionId,
+                    title: sectionId,
+                    text: ""
+                };
+                sectionOrder.push(sectionId);
+            }
+            if (entry.data && typeof entry.data.text === "string") {
+                sections[sectionId].text = entry.data.text;
+            }
+            if (entry.data && entry.data.courseName && !courseName) {
+                courseName = entry.data.courseName;
+            }
+        }
+
+        var courseEntry = courseRegistry[courseId];
+        if (courseEntry && courseEntry.forms.length) {
+            if (!courseName && courseEntry.courseName) {
+                courseName = courseEntry.courseName;
+            }
+            for (var j = 0; j < courseEntry.forms.length; j++) {
+                var form = courseEntry.forms[j];
+                if (!form) {
+                    continue;
+                }
+                var sectionIdFromForm = form.getAttribute("data-sectionid");
+                if (!sectionIdFromForm) {
+                    continue;
+                }
+                var sectionTitle = form.getAttribute("data-sectiontitle") || form.getAttribute("data-sectionname");
+                var textarea = form.querySelector("textarea");
+                var noteText = textarea ? (textarea.value || "") : "";
+                if (!sections[sectionIdFromForm]) {
+                    sections[sectionIdFromForm] = {
+                        id: sectionIdFromForm,
+                        title: sectionTitle || sectionIdFromForm,
+                        text: noteText
+                    };
+                    sectionOrder.push(sectionIdFromForm);
+                } else {
+                    sections[sectionIdFromForm].text = noteText;
+                    if (sectionTitle) {
+                        sections[sectionIdFromForm].title = sectionTitle;
+                    }
+                }
+            }
+        }
+
+        var seen = {};
+        var uniqueOrder = [];
+        for (var k = 0; k < sectionOrder.length; k++) {
+            var key = sectionOrder[k];
+            if (key && !seen[key]) {
+                seen[key] = true;
+                uniqueOrder.push(key);
+            }
+        }
+        uniqueOrder.sort();
+
+        if (!uniqueOrder.length) {
+            return {
+                markdown: "",
+                filenameBase: courseName || (courseEntry && courseEntry.courseName) || ("course-" + courseId)
+            };
+        }
+
+        var effectiveCourseName = courseName || (courseEntry && courseEntry.courseName) || ("Course " + courseId);
+        var lines = ["# " + effectiveCourseName, ""];
+        for (var m = 0; m < uniqueOrder.length; m++) {
+            var sectionData = sections[uniqueOrder[m]];
+            if (!sectionData) {
+                continue;
+            }
+            var heading = "## " + (sectionData.title || sectionData.id || ("Section " + (m + 1)));
             lines.push(heading);
             lines.push("");
-            var textarea = form.querySelector("textarea");
-            var noteText = textarea ? textarea.value : "";
-            lines.push(noteText ? noteText : "_(no notes yet)_");
+            var text = sectionData.text ? sectionData.text : "_(no notes yet)_";
+            lines.push(text);
             lines.push("");
         }
-        return lines.join("\n");
+        return {
+            markdown: lines.join("\n"),
+            filenameBase: effectiveCourseName
+        };
     }
 
     function triggerDownload(filename, content) {
@@ -104,16 +240,14 @@
             targetCourseId = choice;
         }
         var courseEntry = courseRegistry[targetCourseId];
-        if (!courseEntry || !courseEntry.forms.length) {
-            alert("No notes found for the selected course.");
-            return;
-        }
-        var markdown = buildMarkdown(courseEntry, targetCourseId);
+        var noteBundle = collectCourseNotes(targetCourseId);
+        var markdown = noteBundle.markdown;
         if (!markdown) {
             alert("Nothing to export.");
             return;
         }
-        var filenameBase = courseEntry.courseName || ("course-" + targetCourseId);
+        var fallbackName = (courseEntry && courseEntry.courseName) ? courseEntry.courseName : ("course-" + targetCourseId);
+        var filenameBase = noteBundle.filenameBase || fallbackName;
         var filename = sanitizeFileName(filenameBase) + "-notes.md";
         triggerDownload(filename, markdown);
     }
