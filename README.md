@@ -21,7 +21,7 @@ A static example page (`test.html`) demonstrates how to embed lightweight learne
 
 * Use unique `data-sectionid` values so each note persists independently.
 * Reuse the same `data-courseid` across a course. If you repeat a `sectionid` on another page with the same course ID, the stored note carries over.
-* Include `nodole.js` at the bottom of any page that uses these forms (after the DOM content).
+* Include `noodle.js` at the bottom of any page that uses these forms (after the DOM content).
 
 ## Files
 
