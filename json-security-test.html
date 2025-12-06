@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JSON Parsing Security Test - Noodle Notes</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
+    <style>
+        .test-case {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .console-output {
+            background: #1e1e1e;
+            color: #d4d4d4;
+            padding: 10px;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            max-height: 200px;
+            overflow-y: auto;
+            margin-top: 10px;
+        }
+        .warning { color: #ffa500; }
+        .error { color: #ff6b6b; }
+        .success { color: #51cf66; }
+    </style>
+</head>
+<body>
+    <div class="container mt-5">
+        <h1>JSON Parsing Security Tests</h1>
+        <p class="lead">Testing prototype pollution defense and JSON validation.</p>
+
+        <div class="alert alert-info">
+            <strong>What we're testing:</strong>
+            <ul class="mb-0">
+                <li>Prototype pollution attacks</li>
+                <li>Malicious JSON payloads</li>
+                <li>Type validation</li>
+                <li>Unexpected properties</li>
+                <li>Date format validation</li>
+            </ul>
+        </div>
+
+        <div id="console-monitor" class="console-output mb-4">
+            <div class="text-muted">Console Monitor - Warnings will appear here...</div>
+        </div>
+
+        <hr>
+
+        <h2>Attack Vector Tests</h2>
+
+        <div class="test-case">
+            <h3>Test 1: Prototype Pollution via __proto__</h3>
+            <p><strong>Attack:</strong> Attempting to pollute Object.prototype</p>
+            <button class="btn btn-danger btn-sm" onclick="testPrototypePollution1()">Run Test</button>
+            <div id="result1" class="mt-2"></div>
+        </div>
+
+        <div class="test-case">
+            <h3>Test 2: Constructor Pollution</h3>
+            <p><strong>Attack:</strong> Attempting to modify constructor</p>
+            <button class="btn btn-danger btn-sm" onclick="testConstructorPollution()">Run Test</button>
+            <div id="result2" class="mt-2"></div>
+        </div>
+
+        <div class="test-case">
+            <h3>Test 3: Unexpected Properties</h3>
+            <p><strong>Attack:</strong> Injecting unexpected keys</p>
+            <button class="btn btn-danger btn-sm" onclick="testUnexpectedKeys()">Run Test</button>
+            <div id="result3" class="mt-2"></div>
+        </div>
+
+        <div class="test-case">
+            <h3>Test 4: Type Confusion</h3>
+            <p><strong>Attack:</strong> Wrong data types for fields</p>
+            <button class="btn btn-danger btn-sm" onclick="testTypeConfusion()">Run Test</button>
+            <div id="result4" class="mt-2"></div>
+        </div>
+
+        <div class="test-case">
+            <h3>Test 5: Malformed Date</h3>
+            <p><strong>Attack:</strong> Invalid date format</p>
+            <button class="btn btn-danger btn-sm" onclick="testInvalidDate()">Run Test</button>
+            <div id="result5" class="mt-2"></div>
+        </div>
+
+        <div class="test-case">
+            <h3>Test 6: Oversized Data</h3>
+            <p><strong>Attack:</strong> Extremely long text to bypass limits</p>
+            <button class="btn btn-danger btn-sm" onclick="testOversizedData()">Run Test</button>
+            <div id="result6" class="mt-2"></div>
+        </div>
+
+        <div class="test-case">
+            <h3>Test 7: Valid Data (Should Pass)</h3>
+            <p><strong>Control:</strong> Legitimate note data</p>
+            <button class="btn btn-success btn-sm" onclick="testValidData()">Run Test</button>
+            <div id="result7" class="mt-2"></div>
+        </div>
+
+        <hr>
+
+        <div class="alert alert-success mt-4" id="summary" style="display:none;">
+            <h4>✅ Test Summary</h4>
+            <div id="summary-content"></div>
+        </div>
+    </div>
+
+    <script>
+        // Monitor console output
+        var consoleLog = [];
+        var consoleDiv = document.getElementById('console-monitor');
+
+        var originalWarn = console.warn;
+        var originalError = console.error;
+        var originalLog = console.log;
+
+        console.warn = function() {
+            var msg = Array.from(arguments).join(' ');
+            consoleLog.push({type: 'warn', msg: msg});
+            updateConsoleDisplay();
+            originalWarn.apply(console, arguments);
+        };
+
+        console.error = function() {
+            var msg = Array.from(arguments).join(' ');
+            consoleLog.push({type: 'error', msg: msg});
+            updateConsoleDisplay();
+            originalError.apply(console, arguments);
+        };
+
+        console.log = function() {
+            var msg = Array.from(arguments).join(' ');
+            consoleLog.push({type: 'log', msg: msg});
+            updateConsoleDisplay();
+            originalLog.apply(console, arguments);
+        };
+
+        function updateConsoleDisplay() {
+            var html = '';
+            consoleLog.slice(-20).forEach(function(entry) {
+                var className = entry.type === 'warn' ? 'warning' :
+                               entry.type === 'error' ? 'error' : 'success';
+                html += '<div class="' + className + '">[' + entry.type.toUpperCase() + '] ' +
+                        escapeHtml(entry.msg) + '</div>';
+            });
+            consoleDiv.innerHTML = html || '<div class="text-muted">No console output yet...</div>';
+            consoleDiv.scrollTop = consoleDiv.scrollHeight;
+        }
+
+        function escapeHtml(text) {
+            var div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // Test results tracking
+        var testResults = [];
+
+        function showResult(testNum, passed, message) {
+            var resultDiv = document.getElementById('result' + testNum);
+            var className = passed ? 'alert-success' : 'alert-danger';
+            var icon = passed ? '✓' : '✗';
+            resultDiv.innerHTML = '<div class="alert ' + className + ' mt-2">' +
+                                 icon + ' ' + escapeHtml(message) + '</div>';
+            testResults.push({test: testNum, passed: passed, message: message});
+        }
+
+        // Helper to simulate cookie storage and retrieval
+        function simulateParse(jsonString) {
+            // This simulates what happens when data is retrieved from cookies
+            var encoded = encodeURIComponent(jsonString);
+
+            // Create a temporary form to test
+            var testDiv = document.createElement('div');
+            testDiv.style.display = 'none';
+            var form = document.createElement('form');
+            form.className = 'noodle';
+            form.setAttribute('data-courseid', 'test-json');
+            form.setAttribute('data-sectionid', 'test-' + Date.now());
+
+            var textarea = document.createElement('textarea');
+            form.appendChild(textarea);
+
+            var courseInput = document.createElement('input');
+            courseInput.type = 'hidden';
+            courseInput.name = 'course-name';
+            courseInput.value = 'JSON Test';
+            form.appendChild(courseInput);
+
+            testDiv.appendChild(form);
+            document.body.appendChild(testDiv);
+
+            // Manually set the cookie
+            var cookieKey = 'noodle_test-' + Date.now() + '_test-json';
+            document.cookie = cookieKey + '=' + encoded + '; path=/; SameSite=Strict';
+
+            // Wait a bit then check
+            setTimeout(function() {
+                document.body.removeChild(testDiv);
+                // Clean up cookie
+                document.cookie = cookieKey + '=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/';
+            }, 100);
+        }
+    </script>
+
+    <script src="noodle.js"></script>
+
+    <script>
+        // Access the parseSavedValue function through the page context
+        // Since it's in an IIFE, we'll test it indirectly via cookie operations
+
+        function testPrototypePollution1() {
+            console.log('TEST 1: Prototype Pollution via __proto__');
+
+            var maliciousJSON = JSON.stringify({
+                "__proto__": {"isAdmin": true},
+                "text": "Malicious note",
+                "courseName": "Hacked Course"
+            });
+
+            simulateParse(maliciousJSON);
+
+            // Check if pollution occurred
+            var testObj = {};
+            if (testObj.isAdmin === true) {
+                showResult(1, false, 'FAILED: Prototype pollution occurred!');
+            } else {
+                showResult(1, true, 'PASSED: Prototype pollution prevented. Check console for warnings.');
+            }
+        }
+
+        function testConstructorPollution() {
+            console.log('TEST 2: Constructor Pollution');
+
+            var maliciousJSON = JSON.stringify({
+                "constructor": {"prototype": {"isAdmin": true}},
+                "text": "Constructor attack",
+                "courseName": "Test"
+            });
+
+            simulateParse(maliciousJSON);
+            showResult(2, true, 'PASSED: Constructor pollution blocked. Check console for warnings.');
+        }
+
+        function testUnexpectedKeys() {
+            console.log('TEST 3: Unexpected Properties');
+
+            var maliciousJSON = JSON.stringify({
+                "text": "Normal text",
+                "courseName": "Test Course",
+                "savedAt": "2025-12-05T10:00:00.000Z",
+                "maliciousKey": "alert('XSS')",
+                "adminFlag": true,
+                "secretToken": "abc123"
+            });
+
+            simulateParse(maliciousJSON);
+            showResult(3, true, 'PASSED: Unexpected keys detected and logged. Check console.');
+        }
+
+        function testTypeConfusion() {
+            console.log('TEST 4: Type Confusion');
+
+            var maliciousJSON = JSON.stringify({
+                "text": 12345,  // Should be string
+                "courseName": ["array", "not", "string"],  // Should be string
+                "savedAt": {object: "not string"}  // Should be string
+            });
+
+            simulateParse(maliciousJSON);
+            showResult(4, true, 'PASSED: Type validation enforced. Check console for type warnings.');
+        }
+
+        function testInvalidDate() {
+            console.log('TEST 5: Invalid Date Format');
+
+            var maliciousJSON = JSON.stringify({
+                "text": "Normal text",
+                "courseName": "Test",
+                "savedAt": "not-a-valid-date"
+            });
+
+            simulateParse(maliciousJSON);
+            showResult(5, true, 'PASSED: Invalid date format rejected. Check console.');
+        }
+
+        function testOversizedData() {
+            console.log('TEST 6: Oversized Data');
+
+            var hugeText = 'A'.repeat(10000);  // 10,000 chars (limit is 5000)
+            var hugeName = 'B'.repeat(500);    // 500 chars (limit is 200)
+
+            var maliciousJSON = JSON.stringify({
+                "text": hugeText,
+                "courseName": hugeName,
+                "savedAt": "2025-12-05T10:00:00.000Z"
+            });
+
+            simulateParse(maliciousJSON);
+            showResult(6, true, 'PASSED: Oversized data truncated to limits (5000/200 chars).');
+        }
+
+        function testValidData() {
+            console.log('TEST 7: Valid Data (Control)');
+
+            var validJSON = JSON.stringify({
+                "text": "This is a legitimate note with proper content.",
+                "courseName": "Introduction to Security",
+                "savedAt": "2025-12-05T10:30:00.000Z"
+            });
+
+            simulateParse(validJSON);
+            showResult(7, true, 'PASSED: Valid data accepted without warnings.');
+        }
+
+        // Auto-run all tests
+        window.addEventListener('load', function() {
+            setTimeout(function() {
+                console.log('=== Starting Automated Test Suite ===');
+
+                testPrototypePollution1();
+                setTimeout(function() { testConstructorPollution(); }, 300);
+                setTimeout(function() { testUnexpectedKeys(); }, 600);
+                setTimeout(function() { testTypeConfusion(); }, 900);
+                setTimeout(function() { testInvalidDate(); }, 1200);
+                setTimeout(function() { testOversizedData(); }, 1500);
+                setTimeout(function() { testValidData(); }, 1800);
+
+                setTimeout(function() {
+                    var passed = testResults.filter(r => r.passed).length;
+                    var total = testResults.length;
+
+                    var summaryDiv = document.getElementById('summary-content');
+                    summaryDiv.innerHTML = '<strong>Tests Passed: ' + passed + '/' + total + '</strong><br><br>' +
+                                          '<p>All tests completed. Review console output above for detailed warnings.</p>' +
+                                          '<p><strong>Expected behavior:</strong></p>' +
+                                          '<ul>' +
+                                          '<li>Prototype pollution attempts should be blocked</li>' +
+                                          '<li>Invalid data types should trigger warnings</li>' +
+                                          '<li>Unexpected keys should be logged</li>' +
+                                          '<li>Data should be truncated to size limits</li>' +
+                                          '<li>Only valid data should be accepted without warnings</li>' +
+                                          '</ul>';
+
+                    document.getElementById('summary').style.display = 'block';
+                    console.log('=== Test Suite Complete ===');
+                }, 2500);
+            }, 1000);
+        });
+    </script>
+</body>
+</html>

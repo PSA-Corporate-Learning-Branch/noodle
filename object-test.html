@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html>
+<head><title>Object.create(null) Test</title></head>
+<body>
+    <h1>Testing Object.create(null)</h1>
+    <pre id="output"></pre>
+
+    <script>
+        var output = document.getElementById('output');
+        var log = [];
+
+        // Test 1: Regular object
+        var regular = {text: "Hello World"};
+        log.push("Regular object:");
+        log.push("  Value: " + regular.text);
+        log.push("  Type: " + typeof regular.text);
+        log.push("  Truthy: " + !!regular);
+        log.push("");
+
+        // Test 2: Object.create(null)
+        var clean = Object.create(null);
+        clean.text = "Hello World";
+        log.push("Object.create(null):");
+        log.push("  Value: " + clean.text);
+        log.push("  Type: " + typeof clean.text);
+        log.push("  Truthy: " + !!clean);
+        log.push("  Has .text: " + (clean.text !== undefined));
+        log.push("");
+
+        // Test 3: Setting textarea value
+        var textarea1 = document.createElement('textarea');
+        textarea1.value = regular.text;
+        log.push("Textarea with regular object.text:");
+        log.push("  " + textarea1.value);
+        log.push("");
+
+        var textarea2 = document.createElement('textarea');
+        textarea2.value = clean.text;
+        log.push("Textarea with clean object.text:");
+        log.push("  " + textarea2.value);
+        log.push("");
+
+        // Test 4: What if we access a property that doesn't exist?
+        var clean2 = Object.create(null);
+        log.push("Clean object without text property:");
+        log.push("  clean2.text: " + clean2.text);
+        log.push("  Type: " + typeof clean2.text);
+        log.push("");
+
+        output.textContent = log.join('\n');
+    </script>
+</body>
+</html>

@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Debug Test</title>
+</head>
+<body>
+    <h1>Debug Test</h1>
+
+    <form class="noodle" data-courseid="86" data-sectionid="debug-test">
+        <textarea placeholder="Enter text..."></textarea>
+        <input type="hidden" name="course-name" value="Debug Test Course">
+        <button type="submit">Save</button>
+    </form>
+
+    <div id="debug-output" style="margin-top: 20px; padding: 10px; background: #f0f0f0; font-family: monospace;"></div>
+
+    <script src="noodle.js"></script>
+
+    <script>
+        // Debug what's happening
+        setTimeout(function() {
+            var form = document.querySelector('form.noodle');
+            var textarea = form.querySelector('textarea');
+
+            console.log('Textarea value:', textarea.value);
+            console.log('Textarea value type:', typeof textarea.value);
+            console.log('Textarea value length:', textarea.value.length);
+
+            var debugDiv = document.getElementById('debug-output');
+            debugDiv.innerHTML = 'Textarea value: "' + textarea.value + '"<br>' +
+                                'Type: ' + typeof textarea.value + '<br>' +
+                                'Length: ' + textarea.value.length;
+
+            // Check cookies
+            console.log('All cookies:', document.cookie);
+        }, 1000);
+    </script>
+</body>
+</html>

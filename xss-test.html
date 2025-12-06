@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>XSS Test - Noodle Notes</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
+    <style>
+        .test-case {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .test-case.pass {
+            background-color: #d4edda;
+            border-color: #c3e6cb;
+        }
+        .test-case.fail {
+            background-color: #f8d7da;
+            border-color: #f5c6cb;
+        }
+        .noodle-status {
+            font-size: 0.875rem;
+            color: #6c757d;
+        }
+    </style>
+</head>
+<body>
+    <div class="container mt-5">
+        <h1>XSS Security Test for Noodle Notes</h1>
+        <p class="lead">Testing XSS protection mechanisms. If any alert boxes appear, XSS protection has failed.</p>
+
+        <div class="test-case">
+            <h3>Test 1: XSS in Note Text</h3>
+            <p><strong>Payload:</strong> <code>&lt;script&gt;alert('XSS1')&lt;/script&gt;</code></p>
+            <form class="noodle" data-courseid="test1" data-sectionid="xss-test-1">
+                <textarea placeholder="Enter XSS payload..." class="form-control"><script>alert('XSS1')</script></textarea>
+                <input type="hidden" name="course-name" value="XSS Test Course">
+                <button type="submit" class="btn btn-primary mt-2">Save</button>
+            </form>
+        </div>
+
+        <div class="test-case">
+            <h3>Test 2: XSS via Image Tag</h3>
+            <p><strong>Payload:</strong> <code>&lt;img src=x onerror=alert('XSS2')&gt;</code></p>
+            <form class="noodle" data-courseid="test1" data-sectionid="xss-test-2">
+                <textarea placeholder="Enter XSS payload..." class="form-control"><img src=x onerror=alert('XSS2')></textarea>
+                <input type="hidden" name="course-name" value="XSS Test Course">
+                <button type="submit" class="btn btn-primary mt-2">Save</button>
+            </form>
+        </div>
+
+        <div class="test-case">
+            <h3>Test 3: XSS in Section Title Attribute</h3>
+            <p><strong>Payload:</strong> In data-sectiontitle attribute</p>
+            <form class="noodle"
+                  data-courseid="test1"
+                  data-sectionid="xss-test-3"
+                  data-sectiontitle="<script>alert('XSS3')</script>Section Title">
+                <textarea placeholder="Normal text here..." class="form-control">This section has XSS in the title attribute</textarea>
+                <input type="hidden" name="course-name" value="XSS Test Course">
+                <button type="submit" class="btn btn-primary mt-2">Save</button>
+            </form>
+        </div>
+
+        <div class="test-case">
+            <h3>Test 4: XSS in Course Name</h3>
+            <p><strong>Payload:</strong> In hidden course-name input</p>
+            <form class="noodle" data-courseid="test1" data-sectionid="xss-test-4">
+                <textarea placeholder="Normal text here..." class="form-control">Testing course name XSS</textarea>
+                <input type="hidden" name="course-name" value="<script>alert('XSS4')</script>Bad Course">
+                <button type="submit" class="btn btn-primary mt-2">Save</button>
+            </form>
+        </div>
+
+        <div class="test-case">
+            <h3>Test 5: SQL-style Injection in Note Text</h3>
+            <p><strong>Payload:</strong> <code>' OR '1'='1</code></p>
+            <form class="noodle" data-courseid="test1" data-sectionid="xss-test-5">
+                <textarea placeholder="Enter payload..." class="form-control">' OR '1'='1</textarea>
+                <input type="hidden" name="course-name" value="XSS Test Course">
+                <button type="submit" class="btn btn-primary mt-2">Save</button>
+            </form>
+        </div>
+
+        <div class="test-case">
+            <h3>Test 6: Very Long Input (5000+ chars)</h3>
+            <p><strong>Testing:</strong> Input validation and maxlength enforcement</p>
+            <form class="noodle" data-courseid="test1" data-sectionid="xss-test-6">
+                <textarea placeholder="Try pasting 6000+ characters..." class="form-control" id="long-input"></textarea>
+                <input type="hidden" name="course-name" value="XSS Test Course">
+                <button type="submit" class="btn btn-primary mt-2">Save</button>
+                <div class="mt-2">
+                    <small id="char-count" class="text-muted">Character count: 0</small>
+                    <button type="button" class="btn btn-sm btn-secondary" onclick="fillLongText()">Fill with 6000 chars</button>
+                </div>
+            </form>
+        </div>
+
+        <div class="alert alert-info mt-4">
+            <h4>How to Test:</h4>
+            <ol>
+                <li>Click "Save" on each test case</li>
+                <li>Click the "Export Notes" button that appears</li>
+                <li>Open the downloaded Markdown file in a text editor</li>
+                <li>Verify that all HTML/script tags are escaped (appear as &amp;lt;script&amp;gt; etc.)</li>
+                <li>If you see any unescaped tags or alert boxes, XSS protection has failed</li>
+            </ol>
+        </div>
+
+        <div class="alert alert-success mt-4" id="test-results" style="display:none;">
+            <h4>✅ All Tests Passed!</h4>
+            <p>No alert boxes appeared, and all dangerous content should be escaped in the export.</p>
+        </div>
+    </div>
+
+    <script>
+        // Track if any XSS payload executes
+        var xssDetected = false;
+        var originalAlert = window.alert;
+        window.alert = function(msg) {
+            xssDetected = true;
+            console.error('XSS DETECTED:', msg);
+            originalAlert('⚠️ XSS VULNERABILITY DETECTED: ' + msg);
+        };
+
+        // Character counter for long input test
+        var longInput = document.getElementById('long-input');
+        if (longInput) {
+            longInput.addEventListener('input', function() {
+                document.getElementById('char-count').textContent = 'Character count: ' + this.value.length;
+            });
+        }
+
+        function fillLongText() {
+            var text = 'A'.repeat(6000);
+            document.getElementById('long-input').value = text;
+            document.getElementById('char-count').textContent = 'Character count: 6000';
+        }
+
+        // Check results after export
+        setTimeout(function() {
+            if (!xssDetected) {
+                document.getElementById('test-results').style.display = 'block';
+            }
+        }, 2000);
+    </script>
+
+    <script src="noodle.js"></script>
+</body>
+</html>

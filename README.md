@@ -6,7 +6,8 @@ A static example page (`test.html`) demonstrates how to embed lightweight learne
 
 * Each note block is a standard `<form class="noodle">` that must declare `data-courseid` and `data-sectionid`. These values determine the cookie key (`noodle_<sectionid>_<courseid>`) so notes stay unique per course section.
 * Include a hidden `<input type="hidden" name="course-name" value="...">` inside every form. The value is stored with the notes and used for exports.
-* `noodle.js` scans the page on `DOMContentLoaded`, restores note text from cookies, and intercepts form submission to save the updated content (plus course name) for one year.
+* `noodle.js` scans the page on `DOMContentLoaded`, restores note text from cookies, and intercepts form submission to save the updated content (plus course name and timestamp) for one year.
+* Every save records the timestamp so learners and exports can show when each section was last updated.
 * A single “Export Notes” button is injected and fixed to the bottom-left corner. Clicking it gathers every stored note for the detected course ID(s)—even those captured on other pages—and downloads a Markdown file such as `bc-gov-essentials-notes.md`.
 
 ## Adding note forms

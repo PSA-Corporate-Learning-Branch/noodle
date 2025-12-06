@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cookie & Validation Security Test - Noodle Notes</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
+    <style>
+        .test-case {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .test-result {
+            margin-top: 10px;
+            padding: 10px;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 12px;
+        }
+        .pass { background-color: #d4edda; color: #155724; }
+        .fail { background-color: #f8d7da; color: #721c24; }
+        .info { background-color: #d1ecf1; color: #0c5460; }
+        .noodle-status {
+            font-size: 0.875rem;
+            color: #6c757d;
+        }
+    </style>
+</head>
+<body>
+    <div class="container mt-5">
+        <h1>Cookie Security & Validation Test Suite</h1>
+        <p class="lead">Testing cookie security flags and input validation mechanisms.</p>
+
+        <div class="alert alert-info">
+            <strong>Note:</strong> Open DevTools (F12) > Application > Cookies to verify cookie security flags.
+            <br>Also check the Console for validation warnings.
+        </div>
+
+        <hr>
+
+        <h2>Cookie Security Tests</h2>
+
+        <div class="test-case">
+            <h3>Test 1: Valid IDs (Expected: Success)</h3>
+            <p><strong>Course ID:</strong> <code>test-course-123</code> (valid)</p>
+            <p><strong>Section ID:</strong> <code>section_1</code> (valid)</p>
+            <form class="noodle" data-courseid="test-course-123" data-sectionid="section_1" id="test1">
+                <textarea class="form-control" placeholder="Test with valid IDs">Valid IDs should work perfectly</textarea>
+                <input type="hidden" name="course-name" value="Cookie Test Course">
+                <button type="submit" class="btn btn-primary mt-2">Save</button>
+            </form>
+            <div id="result1" class="test-result info">Awaiting test...</div>
+        </div>
+
+        <div class="test-case">
+            <h3>Test 2: HTML Injection in Course ID (Expected: Sanitized)</h3>
+            <p><strong>Course ID:</strong> <code>test&lt;script&gt;alert(1)&lt;/script&gt;</code></p>
+            <p><strong>Expected:</strong> Invalid characters stripped → <code>testscriptalert1script</code></p>
+            <form class="noodle" data-courseid="test<script>alert(1)</script>" data-sectionid="section_2" id="test2">
+                <textarea class="form-control">Testing HTML injection in course ID</textarea>
+                <input type="hidden" name="course-name" value="Cookie Test Course">
+                <button type="submit" class="btn btn-primary mt-2">Save</button>
+            </form>
+            <div id="result2" class="test-result info">Awaiting test...</div>
+        </div>
+
+        <div class="test-case">
+            <h3>Test 3: SQL Injection Attempt (Expected: Sanitized)</h3>
+            <p><strong>Section ID:</strong> <code>' OR '1'='1</code></p>
+            <p><strong>Expected:</strong> Invalid characters stripped → <code>OR11</code></p>
+            <form class="noodle" data-courseid="test123" data-sectionid="' OR '1'='1" id="test3">
+                <textarea class="form-control">Testing SQL-style injection</textarea>
+                <input type="hidden" name="course-name" value="Cookie Test Course">
+                <button type="submit" class="btn btn-primary mt-2">Save</button>
+            </form>
+            <div id="result3" class="test-result info">Awaiting test...</div>
+        </div>
+
+        <div class="test-case">
+            <h3>Test 4: Path Traversal Attempt (Expected: Sanitized)</h3>
+            <p><strong>Course ID:</strong> <code>../../../etc/passwd</code></p>
+            <p><strong>Expected:</strong> Invalid characters stripped → <code>etcpasswd</code></p>
+            <form class="noodle" data-courseid="../../../etc/passwd" data-sectionid="section_4" id="test4">
+                <textarea class="form-control">Testing path traversal</textarea>
+                <input type="hidden" name="course-name" value="Cookie Test Course">
+                <button type="submit" class="btn btn-primary mt-2">Save</button>
+            </form>
+            <div id="result4" class="test-result info">Awaiting test...</div>
+        </div>
+
+        <div class="test-case">
+            <h3>Test 5: Very Long IDs (Expected: Truncated to 100 chars)</h3>
+            <p><strong>Course ID:</strong> 120 characters (should be truncated to 100)</p>
+            <p><strong>Section ID:</strong> 120 characters (should be truncated to 100)</p>
+            <form class="noodle"
+                  data-courseid="a123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789EXTRA_SHOULD_BE_REMOVED"
+                  data-sectionid="b123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789EXTRA_SHOULD_BE_REMOVED"
+                  id="test5">
+                <textarea class="form-control">Testing length validation</textarea>
+                <input type="hidden" name="course-name" value="Cookie Test Course">
+                <button type="submit" class="btn btn-primary mt-2">Save</button>
+            </form>
+            <div id="result5" class="test-result info">Awaiting test...</div>
+        </div>
+
+        <div class="test-case">
+            <h3>Test 6: Unicode and Special Characters (Expected: Stripped)</h3>
+            <p><strong>Section ID:</strong> <code>test™®©§¶•αβγ</code></p>
+            <p><strong>Expected:</strong> Only alphanumeric kept → <code>test</code></p>
+            <form class="noodle" data-courseid="test123" data-sectionid="test™®©§¶•αβγ" id="test6">
+                <textarea class="form-control">Testing unicode characters</textarea>
+                <input type="hidden" name="course-name" value="Cookie Test Course">
+                <button type="submit" class="btn btn-primary mt-2">Save</button>
+            </form>
+            <div id="result6" class="test-result info">Awaiting test...</div>
+        </div>
+
+        <hr>
+
+        <h2>Cookie Flags Verification</h2>
+
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">How to Verify Cookie Security Flags:</h5>
+                <ol>
+                    <li>Open DevTools (F12 or Right-click > Inspect)</li>
+                    <li>Go to <strong>Application</strong> tab (Chrome) or <strong>Storage</strong> tab (Firefox)</li>
+                    <li>Navigate to <strong>Cookies</strong> in the sidebar</li>
+                    <li>Select your domain</li>
+                    <li>Look for cookies starting with <code>noodle_</code></li>
+                    <li>Verify the following columns:</li>
+                </ol>
+                <table class="table table-sm">
+                    <thead>
+                        <tr>
+                            <th>Flag</th>
+                            <th>Expected Value</th>
+                            <th>Security Benefit</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>SameSite</strong></td>
+                            <td><code>Strict</code></td>
+                            <td>Prevents CSRF attacks</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Secure</strong></td>
+                            <td><code>✓</code> (if HTTPS) or <code>blank</code> (if HTTP)</td>
+                            <td>Forces HTTPS transmission</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Path</strong></td>
+                            <td><code>/</code></td>
+                            <td>Restricts cookie scope</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Expires</strong></td>
+                            <td>~1 year from now</td>
+                            <td>Persistent storage</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <div id="cookie-check-result" class="mt-3"></div>
+                <button class="btn btn-secondary" onclick="checkCookieFlags()">Check Cookie Flags</button>
+            </div>
+        </div>
+
+        <hr>
+
+        <div class="alert alert-success mt-4" id="overall-results" style="display:none;">
+            <h4>✅ Test Summary</h4>
+            <div id="summary-content"></div>
+        </div>
+    </div>
+
+    <script>
+        var testResults = [];
+
+        function checkCookieFlags() {
+            var resultDiv = document.getElementById('cookie-check-result');
+            var cookies = document.cookie;
+
+            if (!cookies) {
+                resultDiv.innerHTML = '<div class="alert alert-warning">No cookies found. Click "Save" on test cases first.</div>';
+                return;
+            }
+
+            var noodleCookies = cookies.split(';').filter(c => c.trim().startsWith('noodle_'));
+
+            if (noodleCookies.length === 0) {
+                resultDiv.innerHTML = '<div class="alert alert-warning">No noodle cookies found. Click "Save" on test cases first.</div>';
+                return;
+            }
+
+            var html = '<div class="alert alert-info">';
+            html += '<strong>Found ' + noodleCookies.length + ' noodle cookie(s)</strong><br>';
+            html += '<small>Note: SameSite and Secure flags cannot be read via JavaScript. ';
+            html += 'Please check DevTools > Application > Cookies to verify.</small><br><br>';
+
+            html += '<strong>Protocol:</strong> ' + window.location.protocol + '<br>';
+            if (window.location.protocol === 'https:') {
+                html += '<span class="text-success">✓ HTTPS detected - Secure flag should be enabled</span>';
+            } else {
+                html += '<span class="text-warning">⚠ HTTP detected - Secure flag will not be set (use HTTPS in production)</span>';
+            }
+
+            html += '</div>';
+            resultDiv.innerHTML = html;
+        }
+
+        // Monitor console for validation warnings
+        var originalWarn = console.warn;
+        var warnings = [];
+        console.warn = function() {
+            warnings.push(Array.from(arguments).join(' '));
+            originalWarn.apply(console, arguments);
+        };
+    </script>
+
+    <script src="noodle.js"></script>
+
+    <script>
+        // Wait for noodle.js to initialize
+        setTimeout(function() {
+            // Run automated tests
+            document.querySelectorAll('form.noodle').forEach(function(form, index) {
+                var testNum = index + 1;
+                var submitBtn = form.querySelector('button[type="submit"]');
+
+                form.addEventListener('submit', function(e) {
+                    setTimeout(function() {
+                        var resultDiv = document.getElementById('result' + testNum);
+                        var courseId = form.getAttribute('data-courseid');
+                        var sectionId = form.getAttribute('data-sectionid');
+
+                        var html = '<strong>Input IDs:</strong><br>';
+                        html += 'Course: <code>' + escapeHtml(courseId) + '</code><br>';
+                        html += 'Section: <code>' + escapeHtml(sectionId) + '</code><br><br>';
+
+                        // Check if form was initialized (validates IDs were acceptable)
+                        var statusEl = form.querySelector('.noodle-status');
+                        if (statusEl) {
+                            html += '<span class="text-success">✓ Form initialized (IDs validated)</span><br>';
+                            html += '<small>' + statusEl.textContent + '</small>';
+                            resultDiv.className = 'test-result pass';
+                            testResults.push({test: testNum, passed: true});
+                        } else {
+                            html += '<span class="text-danger">✗ Form not initialized (IDs rejected)</span>';
+                            resultDiv.className = 'test-result fail';
+                            testResults.push({test: testNum, passed: false});
+                        }
+
+                        resultDiv.innerHTML = html;
+
+                        // Show summary after all tests
+                        if (testNum === 6) {
+                            showSummary();
+                        }
+                    }, 100);
+                });
+            });
+
+            // Auto-run tests
+            setTimeout(function() {
+                console.log('Running automated tests...');
+                document.querySelectorAll('form.noodle button[type="submit"]').forEach(function(btn, i) {
+                    setTimeout(function() {
+                        btn.click();
+                    }, i * 500);
+                });
+            }, 1000);
+
+        }, 500);
+
+        function showSummary() {
+            var summaryDiv = document.getElementById('summary-content');
+            var passed = testResults.filter(r => r.passed).length;
+            var total = testResults.length;
+
+            var html = '<strong>Tests Passed: ' + passed + '/' + total + '</strong><br><br>';
+
+            if (warnings.length > 0) {
+                html += '<strong>Validation Warnings Caught:</strong><br>';
+                html += '<ul>';
+                warnings.forEach(function(w) {
+                    html += '<li><code>' + escapeHtml(w) + '</code></li>';
+                });
+                html += '</ul>';
+                html += '<span class="text-success">✓ Invalid IDs were detected and logged</span><br><br>';
+            }
+
+            html += '<strong>Next Steps:</strong><br>';
+            html += '<ol>';
+            html += '<li>Check DevTools Console for validation warnings</li>';
+            html += '<li>Verify cookie flags in DevTools > Application > Cookies</li>';
+            html += '<li>Confirm SameSite=Strict and Secure (if HTTPS)</li>';
+            html += '</ol>';
+
+            summaryDiv.innerHTML = html;
+            document.getElementById('overall-results').style.display = 'block';
+        }
+
+        function escapeHtml(text) {
+            var div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+    </script>
+</body>
+</html>
