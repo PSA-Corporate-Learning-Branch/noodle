@@ -416,9 +416,6 @@
     }
 
     function parseSavedValue(saved) {
-        console.log("=== parseSavedValue called ===");
-        console.log("Input (first 100 chars):", saved ? saved.substring(0, 100) : "null");
-
         if (!saved) {
             return null;
         }
@@ -426,7 +423,6 @@
         var decoded;
         try {
             decoded = decodeURIComponent(saved);
-            console.log("Decoded (first 100 chars):", decoded.substring(0, 100));
         } catch (e) {
             console.warn("URI decode failed, using raw value");
             decoded = saved;
@@ -440,13 +436,10 @@
 
         // Try to parse as JSON
         try {
-            console.log("Attempting JSON.parse...");
             var parsed = JSON.parse(decoded);
-            console.log("JSON.parse succeeded, result:", parsed);
 
             // Validate structure - reject if not a plain object
             if (!parsed || typeof parsed !== "object") {
-                console.log("Failed: not a plain object");
                 throw new Error("Invalid object structure");
             }
 
@@ -477,16 +470,11 @@
                 if (typeof parsed.text === "string") {
                     var textValue = parsed.text;
 
-                    console.log("Raw text value from parsed:", textValue);
-                    console.log("First char:", textValue.charAt(0), "Last char:", textValue.charAt(textValue.length - 1));
-
                     // Handle legacy double-encoded JSON (migration path)
                     // Check if the text value itself is a JSON string
                     if (textValue.charAt(0) === "{" && textValue.charAt(textValue.length - 1) === "}") {
-                        console.log("Detected potential double-encoded JSON, attempting parse...");
                         try {
                             var innerParsed = JSON.parse(textValue);
-                            console.log("Inner parse succeeded:", innerParsed);
                             if (innerParsed && typeof innerParsed === "object" && typeof innerParsed.text === "string") {
                                 console.warn("Migrating double-encoded legacy data");
                                 textValue = innerParsed.text;
@@ -499,7 +487,6 @@
                                 }
                             }
                         } catch (e) {
-                            console.log("Inner parse failed:", e.message);
                             // Not double-encoded JSON, just text that happens to start with {
                         }
                     }
@@ -537,9 +524,6 @@
             }
 
             // Return object that's truthy and has accessible properties
-            console.log("Returning cleanObj:", cleanObj);
-            console.log("cleanObj.text:", cleanObj.text);
-            console.log("cleanObj keys:", Object.keys(cleanObj));
             return cleanObj;
 
         } catch (e) {
@@ -592,16 +576,6 @@
         var cookieKey = makeKey(courseId, sectionId);
         var savedRaw = getCookie(cookieKey);
         var savedData = parseSavedValue(savedRaw);
-
-        // Debug: Check what we got
-        if (savedRaw) {
-            console.log("Cookie raw value:", savedRaw.substring(0, 100));
-        }
-        if (savedData) {
-            console.log("Parsed data keys:", Object.keys(savedData));
-            console.log("Has text property:", "text" in savedData);
-            console.log("Text value:", savedData.text);
-        }
 
         if (savedData && "text" in savedData && typeof savedData.text === "string") {
             textarea.value = savedData.text;
