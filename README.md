@@ -45,6 +45,7 @@ A static example page (`test.html`) demonstrates how to embed lightweight learne
 * **Autocomplete**: Set to `"off"` since notes are unique content, not form data.
 * **Button text**: Use "Save Notes" instead of just "Save" for clarity.
 * **Status messages**: The script automatically creates a status element with `role="status"` and `aria-live="polite"` to announce save confirmations to screen readers.
+* **Character counter**: Real-time character count with cookie usage percentage warnings at 75%, 90%, and 100% capacity.
 
 ### Form attributes
 

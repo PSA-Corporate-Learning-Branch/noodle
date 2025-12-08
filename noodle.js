@@ -563,6 +563,51 @@
         return status;
     }
 
+    function ensureCharacterCounter(form, textarea) {
+        var counter = form.querySelector(".noodle-char-counter");
+        if (!counter) {
+            counter = document.createElement("small");
+            counter.className = "noodle-char-counter text-muted d-block mt-1";
+            counter.setAttribute("aria-live", "polite");
+            counter.setAttribute("aria-atomic", "true");
+            form.appendChild(counter);
+        }
+        return counter;
+    }
+
+    function updateCharacterCounter(textarea, counter) {
+        var currentLength = textarea.value.length;
+        var maxLength = parseInt(textarea.getAttribute("maxlength"), 10) || 5000;
+        var remaining = maxLength - currentLength;
+
+        // Calculate estimated cookie size
+        var testPayload = {
+            text: textarea.value,
+            courseName: "B.C. Provincial Government Essentials",
+            savedAt: new Date().toISOString()
+        };
+        var estimatedSize = encodeURIComponent(JSON.stringify(testPayload)).length;
+        var cookieLimit = 4096;
+        var percentUsed = Math.round((estimatedSize / cookieLimit) * 100);
+
+        // Update counter text and styling based on usage
+        var counterText = currentLength + " / " + maxLength + " characters";
+
+        if (estimatedSize > cookieLimit) {
+            counter.className = "noodle-char-counter text-danger d-block mt-1 fw-bold";
+            counter.textContent = counterText + " (⚠️ Cookie limit exceeded! Note may not save.)";
+        } else if (percentUsed >= 90) {
+            counter.className = "noodle-char-counter text-warning d-block mt-1 fw-bold";
+            counter.textContent = counterText + " (⚠️ " + percentUsed + "% of cookie limit used)";
+        } else if (percentUsed >= 75) {
+            counter.className = "noodle-char-counter text-warning d-block mt-1";
+            counter.textContent = counterText + " (" + percentUsed + "% of cookie limit used)";
+        } else {
+            counter.className = "noodle-char-counter text-muted d-block mt-1";
+            counter.textContent = counterText;
+        }
+    }
+
     function initForm(form) {
         var textarea = form.querySelector("textarea");
         if (!textarea) {
@@ -614,6 +659,15 @@
             // textContent is safe from XSS, but we validate the timestamp format
             statusEl.textContent = formattedLoad ? "Loaded saved note from " + formattedLoad + "." : "Loaded saved note.";
         }
+
+        // Add character counter
+        var charCounter = ensureCharacterCounter(form, textarea);
+        updateCharacterCounter(textarea, charCounter);
+
+        // Update counter on input
+        textarea.addEventListener("input", function () {
+            updateCharacterCounter(textarea, charCounter);
+        });
 
         form.addEventListener("submit", function (event) {
             event.preventDefault();
