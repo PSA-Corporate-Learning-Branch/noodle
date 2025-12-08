@@ -664,13 +664,11 @@
         var charCounter = ensureCharacterCounter(form, textarea);
         updateCharacterCounter(textarea, charCounter);
 
-        // Update counter on input
-        textarea.addEventListener("input", function () {
-            updateCharacterCounter(textarea, charCounter);
-        });
+        // Auto-save functionality
+        var autoSaveTimeout = null;
+        var autoSaveDelay = 2000; // 2 seconds after user stops typing
 
-        form.addEventListener("submit", function (event) {
-            event.preventDefault();
+        function saveNote() {
             var timestamp = new Date().toISOString();
             var payload = {
                 text: validateNoteText(textarea.value || "", 5000),
@@ -692,6 +690,39 @@
                 var formatted = formatTimestamp(timestamp);
                 statusEl.textContent = formatted ? "Notes saved successfully at " + formatted + "." : "Notes saved successfully.";
             }
+        }
+
+        // Update counter and trigger auto-save on input
+        textarea.addEventListener("input", function () {
+            updateCharacterCounter(textarea, charCounter);
+
+            // Clear existing timeout
+            if (autoSaveTimeout) {
+                clearTimeout(autoSaveTimeout);
+            }
+
+            // Show "saving..." status
+            if (statusEl) {
+                statusEl.textContent = "Typing...";
+            }
+
+            // Set new timeout for auto-save
+            autoSaveTimeout = setTimeout(function () {
+                saveNote();
+            }, autoSaveDelay);
+        });
+
+        // Manual save via form submit
+        form.addEventListener("submit", function (event) {
+            event.preventDefault();
+
+            // Clear any pending auto-save
+            if (autoSaveTimeout) {
+                clearTimeout(autoSaveTimeout);
+            }
+
+            // Save immediately
+            saveNote();
         });
     }
 
