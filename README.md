@@ -12,16 +12,45 @@ A static example page (`test.html`) demonstrates how to embed lightweight learne
 
 ## Adding note forms
 
+### Basic accessible form structure
+
 ```html
-<form class="noodle" data-courseid="86" data-sectionid="section1">
-    <textarea placeholder="Capture your notes…"></textarea>
+<form class="noodle" data-courseid="86" data-sectionid="section1" data-sectiontitle="Introduction">
+    <label for="notes-section1" class="sr-only">
+        Notes for Section 1: Introduction
+        <span class="sr-only">(saved locally in your browser)</span>
+    </label>
+    <textarea id="notes-section1"
+              class="form-control"
+              placeholder="Capture your notes…"
+              maxlength="5000"
+              rows="4"
+              autocomplete="off"
+              aria-describedby="notes-section1-hint"></textarea>
+    <small id="notes-section1-hint" class="form-text text-muted">
+        Your notes are saved automatically in your browser
+    </small>
     <input type="hidden" name="course-name" value="B.C. Provincial Government Essentials">
-    <button type="submit">Save</button>
+    <button type="submit" class="btn btn-sm btn-primary">
+        Save Notes
+    </button>
 </form>
 ```
 
+### Accessibility features
+
+* **Labels**: Each textarea has an associated `<label>` with a unique `id`. Use Bootstrap's `.sr-only` class to visually hide labels while keeping them accessible to screen readers.
+* **ARIA descriptions**: The `aria-describedby` attribute links the textarea to helpful hint text.
+* **Character limit**: The `maxlength="5000"` attribute enforces the character limit (managed by `noodle.js`).
+* **Autocomplete**: Set to `"off"` since notes are unique content, not form data.
+* **Button text**: Use "Save Notes" instead of just "Save" for clarity.
+* **Status messages**: The script automatically creates a status element with `role="status"` and `aria-live="polite"` to announce save confirmations to screen readers.
+
+### Form attributes
+
 * Use unique `data-sectionid` values so each note persists independently.
 * Reuse the same `data-courseid` across a course. If you repeat a `sectionid` on another page with the same course ID, the stored note carries over.
+* Optional: Add `data-sectiontitle` to provide a human-readable section name for exports.
 * Include `noodle.js` at the bottom of any page that uses these forms (after the DOM content).
 
 ## Files

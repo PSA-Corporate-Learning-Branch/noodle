@@ -399,7 +399,10 @@
         }
         var button = document.createElement("button");
         button.type = "button";
+        button.id = "export-notes-button";
         button.textContent = "Export Notes";
+        button.setAttribute("aria-label", "Export all course notes as Markdown file");
+        button.setAttribute("title", "Download your notes as a .md file");
         button.style.position = "fixed";
         button.style.bottom = "16px";
         button.style.left = "16px";
@@ -411,6 +414,18 @@
         button.style.borderRadius = "4px";
         button.style.boxShadow = "0 2px 6px rgba(0,0,0,0.15)";
         button.style.cursor = "pointer";
+
+        // Add focus styling for keyboard accessibility
+        button.addEventListener("focus", function() {
+            this.style.outline = "3px solid #ffbf47";
+            this.style.outlineOffset = "2px";
+        });
+
+        button.addEventListener("blur", function() {
+            this.style.outline = "";
+            this.style.outlineOffset = "";
+        });
+
         button.addEventListener("click", exportNotes);
         document.body.appendChild(button);
     }
@@ -540,6 +555,9 @@
         if (!status) {
             status = document.createElement("small");
             status.className = "noodle-status text-muted d-block mt-1";
+            status.setAttribute("role", "status");
+            status.setAttribute("aria-live", "polite");
+            status.setAttribute("aria-atomic", "true");
             form.appendChild(status);
         }
         return status;
@@ -594,7 +612,7 @@
         if (statusEl && savedRaw) {
             var formattedLoad = savedData && savedData.savedAt ? formatTimestamp(savedData.savedAt) : "";
             // textContent is safe from XSS, but we validate the timestamp format
-            statusEl.textContent = formattedLoad ? "Loaded saved note (" + formattedLoad + ")." : "Loaded saved note.";
+            statusEl.textContent = formattedLoad ? "Loaded saved note from " + formattedLoad + "." : "Loaded saved note.";
         }
 
         form.addEventListener("submit", function (event) {
@@ -618,7 +636,7 @@
             setCookie(cookieKey, serialized, 365);
             if (statusEl) {
                 var formatted = formatTimestamp(timestamp);
-                statusEl.textContent = formatted ? "Saved locally (" + formatted + ")." : "Saved locally.";
+                statusEl.textContent = formatted ? "Notes saved successfully at " + formatted + "." : "Notes saved successfully.";
             }
         });
     }
