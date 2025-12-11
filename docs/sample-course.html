@@ -1,0 +1,254 @@
+<!doctype html>
+<html lang="en" data-bs-theme="auto">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Sample Course - Noodle Notes</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+    <style>
+        :root {
+            --course-accent: #3f8cff;
+        }
+
+        body {
+            background: radial-gradient(circle at 10% 20%, rgba(63, 140, 255, 0.09), transparent 28%),
+                        radial-gradient(circle at 90% 0%, rgba(99, 214, 255, 0.16), transparent 22%),
+                        linear-gradient(180deg, rgba(0, 0, 0, 0.02), transparent 180px);
+        }
+
+        [data-bs-theme="dark"] body {
+            background: radial-gradient(circle at 10% 20%, rgba(63, 140, 255, 0.16), transparent 28%),
+                        radial-gradient(circle at 90% 0%, rgba(99, 214, 255, 0.22), transparent 22%),
+                        linear-gradient(180deg, rgba(255, 255, 255, 0.04), transparent 180px),
+                        #0b1626;
+        }
+
+        .hero {
+            background: linear-gradient(120deg, var(--course-accent), #6dd5ed);
+            color: #07162b;
+        }
+
+        [data-bs-theme="dark"] .hero {
+            background: linear-gradient(120deg, #275fb2, #2a82a1);
+            color: #eaf3ff;
+        }
+
+        .sr-only {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+            border: 0;
+        }
+    </style>
+    <script>
+        (() => {
+            const stored = localStorage.getItem('sample-color-mode');
+            const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+            const theme = stored || (prefersDark ? 'dark' : 'light');
+            document.documentElement.setAttribute('data-bs-theme', theme);
+        })();
+    </script>
+</head>
+<body class="bg-body">
+<nav class="navbar navbar-expand-lg bg-body-tertiary border-bottom shadow-sm sticky-top">
+    <div class="container">
+        <span class="navbar-brand fw-semibold">Product Essentials</span>
+        <div class="ms-auto d-flex align-items-center gap-2">
+            <span class="text-body-secondary small d-none d-sm-inline">Mode</span>
+            <div class="btn-group btn-group-sm" role="group" aria-label="Toggle color mode">
+                <input type="radio" class="btn-check" name="color-mode" id="theme-light" value="light" autocomplete="off">
+                <label class="btn btn-outline-secondary" for="theme-light">Light</label>
+                <input type="radio" class="btn-check" name="color-mode" id="theme-dark" value="dark" autocomplete="off">
+                <label class="btn btn-outline-secondary" for="theme-dark">Dark</label>
+                <input type="radio" class="btn-check" name="color-mode" id="theme-auto" value="auto" autocomplete="off">
+                <label class="btn btn-outline-secondary" for="theme-auto">Auto</label>
+            </div>
+        </div>
+    </div>
+</nav>
+
+<header class="hero py-5 mb-4">
+    <div class="container">
+        <div class="row align-items-center g-4">
+            <div class="col-lg-7">
+                <p class="text-uppercase fw-semibold small mb-2">Sample course</p>
+                <h1 class="display-5 fw-bold mb-3">Product Essentials</h1>
+                <p class="lead mb-0">A minimal two-module example that shows how to place Noodle note blocks on a course page with auto-save, manual save, and export support.</p>
+            </div>
+            <div class="col-lg-5">
+                <div class="p-4 bg-body text-body rounded-4 shadow-sm">
+                    <p class="fw-semibold mb-3">How to use</p>
+                    <ul class="list-unstyled mb-0">
+                        <li class="d-flex gap-2 mb-2"><span class="badge text-bg-primary">Type</span><span>Fill in the note area under any section.</span></li>
+                        <li class="d-flex gap-2 mb-2"><span class="badge text-bg-primary">Auto-save</span><span>Saving happens 2 seconds after you stop typing.</span></li>
+                        <li class="d-flex gap-2 mb-2"><span class="badge text-bg-primary">Export</span><span>Use the floating export button to download all notes as Markdown.</span></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</header>
+
+<main class="pb-5">
+    <div class="container">
+        <div class="row g-4">
+            <div class="col-lg-8">
+                <section class="card border-0 shadow-sm mb-4">
+                    <div class="card-body p-4">
+                        <div class="d-flex justify-content-between align-items-start flex-wrap gap-2 mb-3">
+                            <div>
+                                <p class="text-uppercase text-body-secondary small mb-1">Section 1</p>
+                                <h2 class="h4 mb-1">Welcome and Overview</h2>
+                                <p class="mb-0 text-body-secondary">Set the scene and capture quick goals for this course.</p>
+                            </div>
+                            <span class="badge rounded-pill text-bg-light border">10 min</span>
+                        </div>
+                        <p class="mb-4">Learn how Noodle tracks notes for each section using unique data attributes. Update the title and placeholder text to match your course tone, then drop in the script reference to enable saves and exports.</p>
+                        <form class="noodle" data-courseid="101" data-sectionid="welcome" data-sectiontitle="Welcome and Overview">
+                            <label for="notes-welcome" class="sr-only">
+                                Notes for Welcome and Overview (saved locally)
+                            </label>
+                            <textarea id="notes-welcome"
+                                      class="form-control mb-2"
+                                      placeholder="Capture your notes or learning goals..."
+                                      maxlength="5000"
+                                      rows="4"
+                                      autocomplete="off"
+                                      aria-describedby="notes-welcome-hint"></textarea>
+                            <small id="notes-welcome-hint" class="form-text text-muted">Auto-saves after you pause typing; manual save works too.</small>
+                            <input type="hidden" name="course-name" value="Product Essentials">
+                            <button type="submit" class="btn btn-sm btn-primary mt-3">Save Notes</button>
+                        </form>
+                    </div>
+                </section>
+
+                <section class="card border-0 shadow-sm mb-4">
+                    <div class="card-body p-4">
+                        <div class="d-flex justify-content-between align-items-start flex-wrap gap-2 mb-3">
+                            <div>
+                                <p class="text-uppercase text-body-secondary small mb-1">Section 2</p>
+                                <h2 class="h4 mb-1">Module: Foundations</h2>
+                                <p class="mb-0 text-body-secondary">Document key concepts as you work through the basics.</p>
+                            </div>
+                            <span class="badge rounded-pill text-bg-light border">15 min</span>
+                        </div>
+                        <p class="mb-4">This module outlines a simple course structure: overview, three lessons, and a quick recap. Swap in your own headings and prompts, and Noodle keeps each section's notes separated by <code>data-sectionid</code>.</p>
+                        <form class="noodle" data-courseid="101" data-sectionid="foundations" data-sectiontitle="Module: Foundations">
+                            <label for="notes-foundations" class="sr-only">
+                                Notes for Module: Foundations (saved locally)
+                            </label>
+                            <textarea id="notes-foundations"
+                                      class="form-control mb-2"
+                                      placeholder="Jot down definitions, links, or takeaways..."
+                                      maxlength="5000"
+                                      rows="4"
+                                      autocomplete="off"
+                                      aria-describedby="notes-foundations-hint"></textarea>
+                            <small id="notes-foundations-hint" class="form-text text-muted">All content stays in this browser unless you export it.</small>
+                            <input type="hidden" name="course-name" value="Product Essentials">
+                            <button type="submit" class="btn btn-sm btn-primary mt-3">Save Notes</button>
+                        </form>
+                    </div>
+                </section>
+
+                <section class="card border-0 shadow-sm mb-4">
+                    <div class="card-body p-4">
+                        <div class="d-flex justify-content-between align-items-start flex-wrap gap-2 mb-3">
+                            <div>
+                                <p class="text-uppercase text-body-secondary small mb-1">Section 3</p>
+                                <h2 class="h4 mb-1">Next Steps</h2>
+                                <p class="mb-0 text-body-secondary">Track follow-ups and questions before exporting.</p>
+                            </div>
+                            <span class="badge rounded-pill text-bg-light border">5 min</span>
+                        </div>
+                        <p class="mb-4">Wrap up the course with action items, links, or reminders. When you're ready, hit the export button to download all notes for this course as Markdown.</p>
+                        <form class="noodle" data-courseid="101" data-sectionid="next-steps" data-sectiontitle="Next Steps">
+                            <label for="notes-next-steps" class="sr-only">
+                                Notes for Next Steps (saved locally)
+                            </label>
+                            <textarea id="notes-next-steps"
+                                      class="form-control mb-2"
+                                      placeholder="List your follow-ups and links..."
+                                      maxlength="5000"
+                                      rows="4"
+                                      autocomplete="off"
+                                      aria-describedby="notes-next-steps-hint"></textarea>
+                            <small id="notes-next-steps-hint" class="form-text text-muted">Export from the floating button at any time.</small>
+                            <input type="hidden" name="course-name" value="Product Essentials">
+                            <button type="submit" class="btn btn-sm btn-primary mt-3">Save Notes</button>
+                        </form>
+                    </div>
+                </section>
+            </div>
+            <div class="col-lg-4">
+                <aside class="card border-0 shadow-sm mb-4">
+                    <div class="card-body p-4">
+                        <h2 class="h5 mb-3">Page checklist</h2>
+                        <ul class="list-group list-group-flush">
+                            <li class="list-group-item px-0">Include <code>data-courseid</code> on every form to scope exports.</li>
+                            <li class="list-group-item px-0">Use unique <code>data-sectionid</code> per section so notes stay separate.</li>
+                            <li class="list-group-item px-0">Add a hidden <code>course-name</code> input for the export filename.</li>
+                            <li class="list-group-item px-0">Load <code>noodle.js</code> after the content so it can initialize forms.</li>
+                        </ul>
+                    </div>
+                </aside>
+                <aside class="card border-0 shadow-sm">
+                    <div class="card-body p-4">
+                        <h2 class="h6 mb-2">Need a quick start?</h2>
+                        <ol class="ps-3 mb-0">
+                            <li>Copy a section block and adjust the IDs and titles.</li>
+                            <li>Update <code>data-courseid</code> to match your LMS course.</li>
+                            <li>Drop <code>noodle.js</code> onto the page.</li>
+                            <li>Test typing, auto-save, manual save, and export.</li>
+                        </ol>
+                    </div>
+                </aside>
+            </div>
+        </div>
+    </div>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-ho+kRjU5DgnDveoxW48UUfGzSy0RKZ77N8BINU3CFAaj6MqFmoVoeAQMtk0u7H04" crossorigin="anonymous"></script>
+<script>
+    (() => {
+        const storedTheme = localStorage.getItem('sample-color-mode') || 'auto';
+        const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)');
+        const root = document.documentElement;
+
+        const setTheme = (mode) => {
+            const theme = mode === 'auto' ? (systemPrefersDark.matches ? 'dark' : 'light') : mode;
+            root.setAttribute('data-bs-theme', theme);
+        };
+
+        const applyStored = () => {
+            const inputs = document.querySelectorAll('input[name="color-mode"]');
+            inputs.forEach(input => input.checked = input.value === storedTheme);
+            setTheme(storedTheme);
+        };
+
+        systemPrefersDark.addEventListener('change', () => {
+            const saved = localStorage.getItem('sample-color-mode') || 'auto';
+            if (saved === 'auto') {
+                setTheme('auto');
+            }
+        });
+
+        document.addEventListener('DOMContentLoaded', () => {
+            applyStored();
+            document.querySelectorAll('input[name="color-mode"]').forEach(input => {
+                input.addEventListener('change', (event) => {
+                    const mode = event.target.value;
+                    localStorage.setItem('sample-color-mode', mode);
+                    setTheme(mode);
+                });
+            });
+        });
+    })();
+</script>
+<script src="../noodle.js"></script>
+</body>
+</html>

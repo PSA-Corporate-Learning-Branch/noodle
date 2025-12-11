@@ -1,0 +1,259 @@
+<!doctype html>
+<html lang="en" data-bs-theme="light">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Noodle Course Notes Demo</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+    <style>
+        :root {
+            --noodle-accent: #5b8def;
+            --noodle-accent-dark: #a4c4ff;
+        }
+
+        body {
+            background: radial-gradient(circle at 20% 20%, rgba(91, 141, 239, 0.08), transparent 28%),
+                        radial-gradient(circle at 80% 0%, rgba(164, 196, 255, 0.12), transparent 24%),
+                        linear-gradient(180deg, rgba(0, 0, 0, 0.02), transparent 120px);
+        }
+
+        [data-bs-theme="dark"] body {
+            background: radial-gradient(circle at 20% 20%, rgba(91, 141, 239, 0.16), transparent 28%),
+                        radial-gradient(circle at 80% 0%, rgba(164, 196, 255, 0.18), transparent 24%),
+                        linear-gradient(180deg, rgba(255, 255, 255, 0.04), transparent 120px),
+                        #0b1526;
+        }
+
+        .noodle-hero {
+            background: linear-gradient(120deg, var(--noodle-accent), #6dd5ed);
+            color: #0c203a;
+        }
+
+        [data-bs-theme="dark"] .noodle-hero {
+            background: linear-gradient(120deg, #1d4ea5, #2f6b9f);
+            color: #eaf3ff;
+        }
+
+        pre code {
+            font-size: 0.9rem;
+        }
+    </style>
+    <script>
+        (() => {
+            const storedTheme = localStorage.getItem('noodle-color-mode');
+            const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+            const theme = storedTheme || (prefersDark ? 'dark' : 'light');
+            document.documentElement.setAttribute('data-bs-theme', theme);
+        })();
+    </script>
+</head>
+<body class="bg-body">
+<nav class="navbar navbar-expand-lg bg-body-tertiary border-bottom shadow-sm sticky-top">
+    <div class="container">
+        <span class="navbar-brand fw-semibold">Noodle Notes</span>
+        <div class="d-flex align-items-center gap-2">
+            <span class="text-body-secondary small d-none d-sm-inline">Color mode</span>
+            <div class="btn-group" role="group" aria-label="Toggle color mode">
+                <input type="radio" class="btn-check" name="color-mode" id="theme-light" autocomplete="off" value="light">
+                <label class="btn btn-outline-secondary btn-sm" for="theme-light">Light</label>
+                <input type="radio" class="btn-check" name="color-mode" id="theme-dark" autocomplete="off" value="dark">
+                <label class="btn btn-outline-secondary btn-sm" for="theme-dark">Dark</label>
+                <input type="radio" class="btn-check" name="color-mode" id="theme-auto" autocomplete="off" value="auto">
+                <label class="btn btn-outline-secondary btn-sm" for="theme-auto">Auto</label>
+            </div>
+        </div>
+    </div>
+</nav>
+
+<header class="noodle-hero py-5 mb-4">
+    <div class="container">
+        <div class="row align-items-center g-4">
+            <div class="col-lg-7">
+                <p class="text-uppercase fw-semibold small mb-2">Guide</p>
+                <h1 class="display-5 fw-bold mb-3">Noodle Course Notes Demo</h1>
+                <p class="lead mb-0">Embed lightweight learner note fields inside course content with automatic cookie-based persistence and a one-click Markdown export.</p>
+            </div>
+            <div class="col-lg-5">
+                <div class="p-4 rounded-4 bg-body text-body shadow-sm">
+                    <p class="fw-semibold mb-2">Quick facts</p>
+                    <ul class="list-unstyled mb-0">
+                        <li class="d-flex align-items-start gap-2"><span class="badge text-bg-primary">Storage</span><span>Notes stay in browser cookies; no server required.</span></li>
+                        <li class="d-flex align-items-start gap-2"><span class="badge text-bg-primary">Autosave</span><span>Auto-saves after typing pauses; manual save also available.</span></li>
+                        <li class="d-flex align-items-start gap-2"><span class="badge text-bg-primary">Export</span><span>Floating button exports all notes for the current course as Markdown.</span></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</header>
+
+<main class="pb-5">
+    <section class="container mb-5">
+        <div class="row g-4 align-items-start">
+            <div class="col-lg-7">
+                <div class="card shadow-sm border-0">
+                    <div class="card-body p-4">
+                        <h2 class="h4 mb-3">How it works</h2>
+                        <ul class="list-group list-group-flush">
+                            <li class="list-group-item px-0">Each note block is a form with <code>class="noodle"</code> and <code>data-courseid</code>/<code>data-sectionid</code> values that generate a unique cookie key (<code>noodle_&lt;sectionid&gt;_&lt;courseid&gt;</code>).</li>
+                            <li class="list-group-item px-0">Include a hidden <code>&lt;input type="hidden" name="course-name"&gt;</code> inside every form so the value is stored and used for exports.</li>
+                            <li class="list-group-item px-0"><code>noodle.js</code> restores note text on load, handles auto-save and manual save, and injects the floating export button.</li>
+                            <li class="list-group-item px-0"><strong>Auto-save:</strong> Notes save two seconds after typing stops; status updates accordingly.</li>
+                            <li class="list-group-item px-0"><strong>Manual save:</strong> Click the "Save Notes" button to save immediately.</li>
+                            <li class="list-group-item px-0">Every save records a timestamp for in-page status and exports.</li>
+                            <li class="list-group-item px-0">A single "Export Notes" button is fixed to the bottom-left corner and exports Markdown such as <code>bc-gov-essentials-notes.md</code>.</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-5">
+                <div class="card shadow-sm border-0 h-100">
+                    <div class="card-body p-4">
+                        <h2 class="h5 mb-3">Files</h2>
+                        <div class="table-responsive">
+                            <table class="table align-middle mb-0">
+                                <thead>
+                                    <tr>
+                                        <th scope="col">File</th>
+                                        <th scope="col">Description</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td><code>test.html</code></td>
+                                        <td>Sample course landing page with two noodle note forms.</td>
+                                    </tr>
+                                    <tr>
+                                        <td><code>noodle.js</code></td>
+                                        <td>Vanilla JS helper that manages cookies, status, exports, and the floating button.</td>
+                                    </tr>
+                                    <tr>
+                                        <td><code>README.md</code></td>
+                                        <td>This guide.</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <p class="text-body-secondary small mt-3 mb-0">Open <code>test.html</code> in a browser to see the complete demo in action.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="container mb-5">
+        <div class="row g-4">
+            <div class="col-lg-6">
+                <div class="card shadow-sm border-0 h-100">
+                    <div class="card-body p-4">
+                        <h2 class="h4 mb-3">Adding note forms</h2>
+                        <p class="text-body-secondary">Use this accessible form structure anywhere you want notes saved in the browser.</p>
+<pre class="bg-body-secondary rounded-3 p-3 mb-0"><code>&lt;form class="noodle" data-courseid="86" data-sectionid="section1" data-sectiontitle="Introduction"&gt;
+    &lt;label for="notes-section1" class="sr-only"&gt;
+        Notes for Section 1: Introduction
+        &lt;span class="sr-only"&gt;(saved locally in your browser)&lt;/span&gt;
+    &lt;/label&gt;
+    &lt;textarea id="notes-section1"
+              class="form-control"
+              placeholder="Capture your notes..."
+              maxlength="5000"
+              rows="4"
+              autocomplete="off"
+              aria-describedby="notes-section1-hint"&gt;&lt;/textarea&gt;
+    &lt;small id="notes-section1-hint" class="form-text text-muted"&gt;
+        Your notes are saved automatically in your browser
+    &lt;/small&gt;
+    &lt;input type="hidden" name="course-name" value="B.C. Provincial Government Essentials"&gt;
+    &lt;button type="submit" class="btn btn-sm btn-primary"&gt;
+        Save Notes
+    &lt;/button&gt;
+&lt;/form&gt;</code></pre>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-6">
+                <div class="card shadow-sm border-0 h-100">
+                    <div class="card-body p-4">
+                        <h2 class="h5 mb-3">Accessibility features</h2>
+                        <ul class="list-group list-group-flush">
+                            <li class="list-group-item px-0">Labels: each textarea has an associated label; use <code>.sr-only</code> to keep it screen-reader visible.</li>
+                            <li class="list-group-item px-0">ARIA descriptions: <code>aria-describedby</code> links to hint text.</li>
+                            <li class="list-group-item px-0">Character limit: <code>maxlength="5000"</code> is enforced.</li>
+                            <li class="list-group-item px-0">Autocomplete: set to <code>off</code> since notes are unique per learner.</li>
+                            <li class="list-group-item px-0">Button text: prefer "Save Notes" for clarity.</li>
+                            <li class="list-group-item px-0">Status messages: script adds <code>role="status"</code> with polite announcements.</li>
+                            <li class="list-group-item px-0">Character counter: warns at 75%, 90%, and 100% of cookie capacity.</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="container pb-4">
+        <div class="row g-4">
+            <div class="col-lg-6">
+                <div class="card shadow-sm border-0 h-100">
+                    <div class="card-body p-4">
+                        <h2 class="h5 mb-3">Form attributes</h2>
+                        <ul class="list-group list-group-flush">
+                            <li class="list-group-item px-0">Use unique <code>data-sectionid</code> values so each note persists independently.</li>
+                            <li class="list-group-item px-0">Reuse the same <code>data-courseid</code> across pages to share section notes.</li>
+                            <li class="list-group-item px-0">Optional: add <code>data-sectiontitle</code> for human-readable names in exports.</li>
+                            <li class="list-group-item px-0">Include <code>noodle.js</code> at the bottom of any page that uses these forms.</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-6">
+                <div class="card shadow-sm border-0 h-100">
+                    <div class="card-body p-4">
+                        <h2 class="h5 mb-3">Next steps</h2>
+                        <p class="mb-2">See <code>test.html</code> for a live example with two sections and the floating export button already in place.</p>
+                        <p class="mb-0 text-body-secondary">Copy the snippet above into your course pages, adjust IDs and titles, then include <code>noodle.js</code> to handle saving and exports.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-ho+kRjU5DgnDveoxW48UUfGzSy0RKZ77N8BINU3CFAaj6MqFmoVoeAQMtk0u7H04" crossorigin="anonymous"></script>
+<script>
+    (() => {
+        const storedTheme = localStorage.getItem('noodle-color-mode');
+        const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)');
+        const root = document.documentElement;
+        const setTheme = (mode) => {
+            const theme = mode === 'auto' ? (systemPrefersDark.matches ? 'dark' : 'light') : mode;
+            root.setAttribute('data-bs-theme', theme);
+        };
+
+        const applyStored = () => {
+            const current = localStorage.getItem('noodle-color-mode') || 'auto';
+            const inputs = document.querySelectorAll('input[name="color-mode"]');
+            inputs.forEach(input => input.checked = input.value === current);
+            setTheme(current);
+        };
+
+        systemPrefersDark.addEventListener('change', () => {
+            const current = localStorage.getItem('noodle-color-mode') || 'auto';
+            if (current === 'auto') {
+                setTheme('auto');
+            }
+        });
+
+        document.addEventListener('DOMContentLoaded', () => {
+            applyStored();
+            document.querySelectorAll('input[name="color-mode"]').forEach(input => {
+                input.addEventListener('change', (event) => {
+                    const mode = event.target.value;
+                    localStorage.setItem('noodle-color-mode', mode);
+                    setTheme(mode);
+                });
+            });
+        });
+    })();
+</script>
+</body>
+</html>
