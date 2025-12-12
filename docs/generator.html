@@ -1,0 +1,360 @@
+<!doctype html>
+<html lang="en" data-bs-theme="auto">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Noodle Form Generator</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+    <style>
+        :root {
+            --noodle-accent: #5b8def;
+            --noodle-accent-dark: #1f3b6c;
+        }
+        body {
+            background: radial-gradient(circle at 12% 18%, rgba(91, 141, 239, 0.1), transparent 28%),
+                        radial-gradient(circle at 88% 6%, rgba(164, 196, 255, 0.2), transparent 26%),
+                        linear-gradient(180deg, rgba(0, 0, 0, 0.03), transparent 160px);
+        }
+        [data-bs-theme="dark"] body {
+            background: radial-gradient(circle at 12% 18%, rgba(91, 141, 239, 0.18), transparent 28%),
+                        radial-gradient(circle at 88% 6%, rgba(164, 196, 255, 0.22), transparent 26%),
+                        linear-gradient(180deg, rgba(255, 255, 255, 0.05), transparent 160px),
+                        #0b1526;
+        }
+        .page-hero {
+            background: linear-gradient(120deg, var(--noodle-accent), #6dd5ed);
+            color: #0c203a;
+        }
+        [data-bs-theme="dark"] .page-hero {
+            background: linear-gradient(120deg, #1d4ea5, #2f6b9f);
+            color: #eaf3ff;
+        }
+        .section-card {
+            border-left: 4px solid var(--noodle-accent);
+        }
+    </style>
+    <script>
+        (() => {
+            const storedTheme = localStorage.getItem('generator-color-mode');
+            const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+            const theme = storedTheme || (prefersDark ? 'dark' : 'light');
+            document.documentElement.setAttribute('data-bs-theme', theme);
+        })();
+    </script>
+</head>
+<body class="bg-body">
+<nav class="navbar navbar-expand-lg bg-body-tertiary border-bottom shadow-sm sticky-top">
+    <div class="container">
+        <a class="navbar-brand fw-semibold" href="index.html">Noodle Notes</a>
+        <div class="d-flex align-items-center gap-2">
+            <span class="text-body-secondary small d-none d-sm-inline">Color mode</span>
+            <div class="btn-group" role="group" aria-label="Toggle color mode">
+                <input type="radio" class="btn-check" name="color-mode" id="theme-light" autocomplete="off" value="light">
+                <label class="btn btn-outline-secondary btn-sm" for="theme-light">Light</label>
+                <input type="radio" class="btn-check" name="color-mode" id="theme-dark" autocomplete="off" value="dark">
+                <label class="btn btn-outline-secondary btn-sm" for="theme-dark">Dark</label>
+                <input type="radio" class="btn-check" name="color-mode" id="theme-auto" autocomplete="off" value="auto">
+                <label class="btn btn-outline-secondary btn-sm" for="theme-auto">Auto</label>
+            </div>
+        </div>
+    </div>
+</nav>
+
+<header class="page-hero py-5 mb-4">
+    <div class="container">
+        <div class="row align-items-center g-4">
+            <div class="col-lg-7">
+                <p class="text-uppercase fw-semibold small mb-2">Generator</p>
+                <h1 class="display-5 fw-bold mb-3">Noodle Form Builder</h1>
+                <p class="lead mb-0">Enter a course name and add sections to generate ready-to-drop HTML forms with the correct data attributes for <code>noodle.js</code>.</p>
+            </div>
+            <div class="col-lg-5">
+                <div class="p-4 rounded-4 bg-body text-body shadow-sm section-card">
+                    <p class="fw-semibold mb-2">What you'll get</p>
+                    <ul class="list-unstyled mb-0">
+                        <li class="d-flex align-items-start gap-2"><span class="badge text-bg-primary">Forms</span><span>Accessible form markup with labels, hints, and <code>data-courseid</code>/<code>data-sectionid</code>.</span></li>
+                        <li class="d-flex align-items-start gap-2"><span class="badge text-bg-primary">Hidden course name</span><span>Automatically inserted <code>course-name</code> input for exports.</span></li>
+                        <li class="d-flex align-items-start gap-2"><span class="badge text-bg-primary">One copy</span><span>Paste the snippet into your course page and include <code>noodle.js</code> once.</span></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</header>
+
+<main class="pb-5">
+    <section class="container mb-4">
+        <nav aria-label="breadcrumb" class="mb-3">
+            <ol class="breadcrumb mb-1">
+                <li class="breadcrumb-item"><a href="index.html" class="text-decoration-none">Noodle guide</a></li>
+                <li class="breadcrumb-item active" aria-current="page">Form builder</li>
+            </ol>
+        </nav>
+        <div class="card shadow-sm border-0">
+            <div class="card-body p-4">
+                <div class="d-flex justify-content-between align-items-start flex-wrap gap-3 mb-3">
+                    <div>
+                        <h2 class="h4 mb-1">Build your snippet</h2>
+                        <p class="text-body-secondary mb-0">Fill in the course details, add sections, then generate the HTML to copy into your LMS page.</p>
+                    </div>
+                    <button class="btn btn-outline-secondary btn-sm" id="add-section-btn" type="button">Add section</button>
+                </div>
+                <div class="row g-3 mb-3">
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold" for="course-id">Course ID (required)</label>
+                        <input type="text" class="form-control" id="course-id" placeholder="e.g., 101 or bc-gov-essentials" required>
+                        <small class="text-body-secondary">Allowed: letters, numbers, hyphens, underscores.</small>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold" for="course-name">Course name (required)</label>
+                        <input type="text" class="form-control" id="course-name" placeholder="e.g., Product Essentials" required>
+                    </div>
+                </div>
+                <div id="sections-container" class="row g-3"></div>
+                <div class="d-flex gap-2 align-items-center mt-3">
+                    <button class="btn btn-primary" id="generate-btn" type="button">Generate HTML</button>
+                    <div class="text-body-secondary small" id="status-text"></div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="container">
+        <div class="card shadow-sm border-0">
+            <div class="card-body p-4">
+                <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-2">
+                    <h2 class="h5 mb-0">Generated HTML</h2>
+                    <button class="btn btn-outline-secondary btn-sm" id="copy-btn" type="button">Copy to clipboard</button>
+                </div>
+                <textarea id="output" class="form-control" rows="12" readonly placeholder="Your generated snippet will appear here."></textarea>
+                <p class="text-body-secondary small mt-2 mb-0">Paste this into your page. Include <code>noodle.js</code> once near the end of the page.</p>
+            </div>
+        </div>
+    </section>
+</main>
+
+<footer class="border-top py-4 mt-5 bg-body-tertiary">
+    <div class="container d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3">
+        <div>
+            <p class="fw-semibold mb-1">Noodle Form Builder</p>
+            <p class="mb-0 text-body-secondary">Generate accessible noodle form snippets and drop them into your course page.</p>
+        </div>
+        <div class="d-flex gap-2">
+            <a class="btn btn-outline-primary" href="index.html">Back to Noodle guide</a>
+            <a class="btn btn-outline-secondary" href="sample-course.html">View sample course</a>
+        </div>
+    </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+<script>
+    (() => {
+        const root = document.documentElement;
+        const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)');
+
+        const setTheme = (mode) => {
+            const theme = mode === 'auto' ? (systemPrefersDark.matches ? 'dark' : 'light') : mode;
+            root.setAttribute('data-bs-theme', theme);
+        };
+
+        const applyStoredTheme = () => {
+            const current = localStorage.getItem('generator-color-mode') || 'auto';
+            document.querySelectorAll('input[name="color-mode"]').forEach(input => {
+                input.checked = input.value === current;
+            });
+            setTheme(current);
+        };
+
+        systemPrefersDark.addEventListener('change', () => {
+            const current = localStorage.getItem('generator-color-mode') || 'auto';
+            if (current === 'auto') {
+                setTheme('auto');
+            }
+        });
+
+        document.addEventListener('DOMContentLoaded', () => {
+            applyStoredTheme();
+            document.querySelectorAll('input[name="color-mode"]').forEach(input => {
+                input.addEventListener('change', (event) => {
+                    const mode = event.target.value;
+                    localStorage.setItem('generator-color-mode', mode);
+                    setTheme(mode);
+                });
+            });
+        });
+    })();
+</script>
+<script>
+    (function () {
+        const sectionsContainer = document.getElementById('sections-container');
+        const addSectionBtn = document.getElementById('add-section-btn');
+        const generateBtn = document.getElementById('generate-btn');
+        const copyBtn = document.getElementById('copy-btn');
+        const output = document.getElementById('output');
+        const statusText = document.getElementById('status-text');
+        const courseIdInput = document.getElementById('course-id');
+        const courseNameInput = document.getElementById('course-name');
+
+        const allowedIdPattern = /[^a-zA-Z0-9_-]/g;
+
+        function slugifyId(value, fallback) {
+            if (!value) return fallback;
+            const cleaned = value.trim().replace(/\s+/g, '-').replace(allowedIdPattern, '');
+            return cleaned || fallback;
+        }
+
+        function createSectionRow(index) {
+            const col = document.createElement('div');
+            col.className = 'col-12';
+            col.innerHTML = `
+                <div class="border rounded-3 p-3 bg-body-secondary-subtle">
+                    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-2">
+                        <div class="fw-semibold">Section ${index + 1}</div>
+                        <button type="button" class="btn btn-outline-danger btn-sm remove-section">Remove</button>
+                    </div>
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">Section title (required)</label>
+                            <input type="text" class="form-control section-title" placeholder="e.g., Introduction">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">Section ID (optional)</label>
+                            <input type="text" class="form-control section-id" placeholder="letters-numbers-underscores-hyphens">
+                            <small class="text-body-secondary d-block mt-1">If empty, we’ll derive one from the title.</small>
+                        </div>
+                    </div>
+                </div>
+            `;
+            return col;
+        }
+
+        function refreshSectionLabels() {
+            const sections = sectionsContainer.querySelectorAll('.border.rounded-3');
+            sections.forEach((section, idx) => {
+                const label = section.querySelector('.fw-semibold');
+                if (label) {
+                    label.textContent = `Section ${idx + 1}`;
+                }
+            });
+        }
+
+        function addSection() {
+            const count = sectionsContainer.querySelectorAll('.border.rounded-3').length;
+            const row = createSectionRow(count);
+            sectionsContainer.appendChild(row);
+        }
+
+        function validateInputs() {
+            const courseIdRaw = courseIdInput.value.trim();
+            const courseNameRaw = courseNameInput.value.trim();
+            if (!courseIdRaw || !courseNameRaw) {
+                return { valid: false, message: 'Course ID and Course name are required.' };
+            }
+            const sections = Array.from(sectionsContainer.querySelectorAll('.border.rounded-3'));
+            if (!sections.length) {
+                return { valid: false, message: 'Add at least one section.' };
+            }
+            for (let i = 0; i < sections.length; i++) {
+                const titleInput = sections[i].querySelector('.section-title');
+                if (!titleInput || !titleInput.value.trim()) {
+                    return { valid: false, message: 'Every section needs a title.' };
+                }
+            }
+            return { valid: true };
+        }
+
+        function buildSnippet() {
+            const courseId = slugifyId(courseIdInput.value, '').substring(0, 100);
+            const courseName = courseNameInput.value.trim().substring(0, 200);
+
+            const sections = Array.from(sectionsContainer.querySelectorAll('.border.rounded-3')).map((section, idx) => {
+                const titleValue = section.querySelector('.section-title').value.trim();
+                const idRaw = section.querySelector('.section-id').value.trim();
+                const sectionId = slugifyId(idRaw || titleValue, `section-${idx + 1}`).substring(0, 100);
+                const textareaId = `notes-${sectionId}`;
+                return {
+                    title: titleValue,
+                    sectionId,
+                    textareaId
+                };
+            });
+
+            const lines = [];
+            sections.forEach(section => {
+                lines.push(`<form class="noodle" data-courseid="${courseId}" data-sectionid="${section.sectionId}" data-sectiontitle="${section.title}">`);
+                lines.push(`    <label for="${section.textareaId}" class="sr-only">`);
+                lines.push(`        Notes for ${section.title} (saved locally)`);
+                lines.push(`    </label>`);
+                lines.push(`    <textarea id="${section.textareaId}"`);
+                lines.push(`              class="form-control mb-1"`);
+                lines.push(`              placeholder="Capture your notes..."`);
+                lines.push(`              maxlength="5000"`);
+                lines.push(`              rows="4"`);
+                lines.push(`              autocomplete="off"`);
+                lines.push(`              aria-describedby="${section.textareaId}-hint"></textarea>`);
+                lines.push(`    <small id="${section.textareaId}-hint" class="form-text text-muted">`);
+                lines.push(`        Your notes are saved automatically in your browser`);
+                lines.push(`    </small>`);
+                lines.push(`    <input type="hidden" name="course-name" value="${courseName}">`);
+                lines.push(`    <button type="submit" class="btn btn-sm btn-primary">Save Notes</button>`);
+                lines.push(`</form>`);
+                lines.push('');
+            });
+            lines.push('<!-- Include once per page -->');
+            lines.push('<script src="noodle.js"></' + 'script>');
+
+            return lines.join('\n').trim();
+        }
+
+        addSectionBtn.addEventListener('click', () => {
+            addSection();
+            refreshSectionLabels();
+        });
+
+        sectionsContainer.addEventListener('click', (event) => {
+            if (event.target.classList.contains('remove-section')) {
+                const wrapper = event.target.closest('.col-12');
+                if (wrapper) {
+                    wrapper.remove();
+                    refreshSectionLabels();
+                }
+            }
+        });
+
+        generateBtn.addEventListener('click', () => {
+            statusText.textContent = '';
+            const validation = validateInputs();
+            if (!validation.valid) {
+                statusText.textContent = validation.message;
+                statusText.className = 'text-danger small';
+                return;
+            }
+            const snippet = buildSnippet();
+            output.value = snippet;
+            statusText.textContent = 'Snippet generated. Copy and paste into your page.';
+            statusText.className = 'text-success small';
+        });
+
+        copyBtn.addEventListener('click', async () => {
+            if (!output.value) {
+                statusText.textContent = 'Nothing to copy yet.';
+                statusText.className = 'text-danger small';
+                return;
+            }
+            try {
+                await navigator.clipboard.writeText(output.value);
+                statusText.textContent = 'Copied to clipboard.';
+                statusText.className = 'text-success small';
+            } catch (err) {
+                statusText.textContent = 'Copy failed. Select and copy manually.';
+                statusText.className = 'text-warning small';
+            }
+        });
+
+        // Initialize with two sections for convenience
+        addSection();
+        addSection();
+    })();
+</script>
+</body>
+</html>
