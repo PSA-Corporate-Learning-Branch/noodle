@@ -541,6 +541,7 @@
     var lastNKeyTime = 0;
     var hotkeysAttached = false;
     var lastTriggerButton = null;
+    var deleteConfirmMessage = "Are you sure you want to delete all saved notes for this course? This cannot be undone.";
 
     function buildNotesModal() {
         if (notesModal) {
@@ -659,8 +660,29 @@
             exportNotesHtml(courseId);
         });
 
+        var deleteBtn = document.createElement("button");
+        deleteBtn.type = "button";
+        deleteBtn.textContent = "Delete All";
+        deleteBtn.className = "btn btn-outline-danger btn-sm";
+        deleteBtn.addEventListener("click", function () {
+            var courseId = exportBtn.getAttribute("data-courseid");
+            if (!courseId) {
+                return;
+            }
+            if (!window.confirm(deleteConfirmMessage)) {
+                return;
+            }
+            deleteCourseNotes(courseId);
+            modal.overlay.style.display = "none";
+            makeBackgroundInert(false);
+            if (lastTriggerButton && typeof lastTriggerButton.focus === "function") {
+                lastTriggerButton.focus();
+            }
+        });
+
         btnWrap.appendChild(exportBtn);
         btnWrap.appendChild(exportHtmlBtn);
+        btnWrap.appendChild(deleteBtn);
 
         actions.appendChild(summary);
         actions.appendChild(btnWrap);
@@ -756,6 +778,12 @@
         }
         var bundle = collectCourseNotes(chosenCourseId);
         modal.exportBtn.setAttribute("data-courseid", chosenCourseId);
+        if (modal.exportHtmlBtn) {
+            modal.exportHtmlBtn.setAttribute("data-courseid", chosenCourseId);
+        }
+        if (modal.deleteBtn) {
+            modal.deleteBtn.setAttribute("data-courseid", chosenCourseId);
+        }
         modal.subtitle.textContent = bundle.courseName ? bundle.courseName + " (" + chosenCourseId + ")" : "Course " + chosenCourseId;
         modal.list.innerHTML = "";
 
