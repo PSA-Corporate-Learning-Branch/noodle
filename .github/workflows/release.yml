@@ -1,0 +1,31 @@
+name: Build release assets
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Build minified bundle
+        run: |
+          mkdir -p dist
+          npx terser@5 noodle.js -c -m -o dist/noodle.min.js
+          sha256sum dist/noodle.min.js > dist/noodle.min.js.sha256
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: |
+            dist/noodle.min.js
+            dist/noodle.min.js.sha256
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
