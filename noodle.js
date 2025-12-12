@@ -487,6 +487,38 @@
         triggerDownload(filename, markdown);
     }
 
+    function deleteCourseNotes(courseId) {
+        if (!courseId) return;
+        // Delete cookies for this course
+        var entries = getAllNoodleCookies();
+        for (var i = 0; i < entries.length; i++) {
+            var entry = entries[i];
+            if ((entry.courseId || "") !== courseId) continue;
+            var cookieName = makeKey(entry.courseId, entry.sectionId);
+            // expire cookie
+            document.cookie = cookieName + "=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/; SameSite=Strict";
+        }
+        // Clear in-memory registry/forms
+        var registryEntry = courseRegistry[courseId];
+        if (registryEntry && registryEntry.forms) {
+            for (var j = 0; j < registryEntry.forms.length; j++) {
+                var form = registryEntry.forms[j];
+                if (!form) continue;
+                var textarea = form.querySelector("textarea");
+                if (textarea) {
+                    textarea.value = "";
+                }
+                form.removeAttribute("data-savedat");
+                form.removeAttribute("data-pageurl");
+                form.removeAttribute("data-pageanchor");
+                var statusEl = form.querySelector(".noodle-status");
+                if (statusEl) {
+                    statusEl.textContent = "Notes cleared.";
+                }
+            }
+        }
+    }
+
     function exportNotesHtml(targetCourseId) {
         var courseId = chooseCourseId(targetCourseId);
         if (!courseId) {
@@ -541,7 +573,6 @@
     var lastNKeyTime = 0;
     var hotkeysAttached = false;
     var lastTriggerButton = null;
-    var deleteConfirmMessage = "Are you sure you want to delete all saved notes for this course? This cannot be undone.";
 
     function buildNotesModal() {
         if (notesModal) {
@@ -669,15 +700,12 @@
             if (!courseId) {
                 return;
             }
-            if (!window.confirm(deleteConfirmMessage)) {
+            if (!window.confirm("Delete all saved notes for this course? This cannot be undone.")) {
                 return;
             }
             deleteCourseNotes(courseId);
-            modal.overlay.style.display = "none";
-            makeBackgroundInert(false);
-            if (lastTriggerButton && typeof lastTriggerButton.focus === "function") {
-                lastTriggerButton.focus();
-            }
+            // Refresh the modal view immediately to reflect the cleared state
+            renderNotesModal(courseId);
         });
 
         btnWrap.appendChild(exportBtn);
@@ -716,6 +744,7 @@
             list: list,
             exportBtn: exportBtn,
             exportHtmlBtn: exportHtmlBtn,
+            deleteBtn: deleteBtn,
             container: container
         };
         return notesModal;
@@ -778,12 +807,6 @@
         }
         var bundle = collectCourseNotes(chosenCourseId);
         modal.exportBtn.setAttribute("data-courseid", chosenCourseId);
-        if (modal.exportHtmlBtn) {
-            modal.exportHtmlBtn.setAttribute("data-courseid", chosenCourseId);
-        }
-        if (modal.deleteBtn) {
-            modal.deleteBtn.setAttribute("data-courseid", chosenCourseId);
-        }
         modal.subtitle.textContent = bundle.courseName ? bundle.courseName + " (" + chosenCourseId + ")" : "Course " + chosenCourseId;
         modal.list.innerHTML = "";
 

@@ -487,6 +487,38 @@
         triggerDownload(filename, markdown);
     }
 
+    function deleteCourseNotes(courseId) {
+        if (!courseId) return;
+        // Delete cookies for this course
+        var entries = getAllNoodleCookies();
+        for (var i = 0; i < entries.length; i++) {
+            var entry = entries[i];
+            if ((entry.courseId || "") !== courseId) continue;
+            var cookieName = makeKey(entry.courseId, entry.sectionId);
+            // expire cookie
+            document.cookie = cookieName + "=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/; SameSite=Strict";
+        }
+        // Clear in-memory registry/forms
+        var registryEntry = courseRegistry[courseId];
+        if (registryEntry && registryEntry.forms) {
+            for (var j = 0; j < registryEntry.forms.length; j++) {
+                var form = registryEntry.forms[j];
+                if (!form) continue;
+                var textarea = form.querySelector("textarea");
+                if (textarea) {
+                    textarea.value = "";
+                }
+                form.removeAttribute("data-savedat");
+                form.removeAttribute("data-pageurl");
+                form.removeAttribute("data-pageanchor");
+                var statusEl = form.querySelector(".noodle-status");
+                if (statusEl) {
+                    statusEl.textContent = "Notes cleared.";
+                }
+            }
+        }
+    }
+
     function exportNotesHtml(targetCourseId) {
         var courseId = chooseCourseId(targetCourseId);
         if (!courseId) {
@@ -659,8 +691,26 @@
             exportNotesHtml(courseId);
         });
 
+        var deleteBtn = document.createElement("button");
+        deleteBtn.type = "button";
+        deleteBtn.textContent = "Delete All";
+        deleteBtn.className = "btn btn-outline-danger btn-sm";
+        deleteBtn.addEventListener("click", function () {
+            var courseId = exportBtn.getAttribute("data-courseid");
+            if (!courseId) {
+                return;
+            }
+            if (!window.confirm("Delete all saved notes for this course? This cannot be undone.")) {
+                return;
+            }
+            deleteCourseNotes(courseId);
+            // Refresh the modal view immediately to reflect the cleared state
+            renderNotesModal(courseId);
+        });
+
         btnWrap.appendChild(exportBtn);
         btnWrap.appendChild(exportHtmlBtn);
+        btnWrap.appendChild(deleteBtn);
 
         actions.appendChild(summary);
         actions.appendChild(btnWrap);
@@ -694,6 +744,7 @@
             list: list,
             exportBtn: exportBtn,
             exportHtmlBtn: exportHtmlBtn,
+            deleteBtn: deleteBtn,
             container: container
         };
         return notesModal;
