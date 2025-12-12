@@ -3,36 +3,29 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Sample Course - Noodle Notes</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
+    <title>Sample Course - Page 2 - Noodle Notes</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
     <style>
-        :root {
-            --course-accent: #3f8cff;
-        }
-
+        :root { --course-accent: #3f8cff; }
         body {
             background: radial-gradient(circle at 10% 20%, rgba(63, 140, 255, 0.09), transparent 28%),
                         radial-gradient(circle at 90% 0%, rgba(99, 214, 255, 0.16), transparent 22%),
                         linear-gradient(180deg, rgba(0, 0, 0, 0.02), transparent 180px);
         }
-
         [data-bs-theme="dark"] body {
             background: radial-gradient(circle at 10% 20%, rgba(63, 140, 255, 0.16), transparent 28%),
                         radial-gradient(circle at 90% 0%, rgba(99, 214, 255, 0.22), transparent 22%),
                         linear-gradient(180deg, rgba(255, 255, 255, 0.04), transparent 180px),
                         #0b1626;
         }
-
         .hero {
             background: linear-gradient(120deg, var(--course-accent), #6dd5ed);
             color: #07162b;
         }
-
         [data-bs-theme="dark"] .hero {
             background: linear-gradient(120deg, #275fb2, #2a82a1);
             color: #eaf3ff;
         }
-
         .sr-only {
             position: absolute;
             width: 1px;
@@ -59,8 +52,8 @@
         <span class="navbar-brand fw-semibold">Product Essentials</span>
         <div class="d-flex align-items-center gap-3">
             <ul class="navbar-nav flex-row gap-2 d-none d-md-flex">
-                <li class="nav-item"><a class="nav-link active" aria-current="page" href="sample-course.html">Page 1</a></li>
-                <li class="nav-item"><a class="nav-link" href="sample-course-2.html">Page 2</a></li>
+                <li class="nav-item"><a class="nav-link" href="sample-course.html">Page 1</a></li>
+                <li class="nav-item"><a class="nav-link active" href="sample-course-2.html" aria-current="page">Page 2</a></li>
                 <li class="nav-item"><a class="nav-link" href="sample-course-3.html">Page 3</a></li>
             </ul>
             <div class="d-flex align-items-center gap-2">
@@ -83,16 +76,16 @@
         <div class="row align-items-center g-4">
             <div class="col-lg-7">
                 <p class="text-uppercase fw-semibold small mb-2">Sample course</p>
-                <h1 class="display-5 fw-bold mb-3">Product Essentials</h1>
-                <p class="lead mb-0">A minimal two-module example that shows how to place Noodle note blocks on a course page with auto-save, manual save, and export support.</p>
+                <h1 class="display-5 fw-bold mb-3">Module Two: Deep Dive</h1>
+                <p class="lead mb-0">Continue the course and add notes for deeper topics; your notes stay linked to this course across pages.</p>
             </div>
             <div class="col-lg-5">
                 <div class="p-4 bg-body text-body rounded-4 shadow-sm">
-                    <p class="fw-semibold mb-3">How to use</p>
+                    <p class="fw-semibold mb-3">Pro tip</p>
                     <ul class="list-unstyled mb-0">
-                        <li class="d-flex gap-2 mb-2"><span class="badge text-bg-primary">Type</span><span>Fill in the note area under any section.</span></li>
-                        <li class="d-flex gap-2 mb-2"><span class="badge text-bg-primary">Auto-save</span><span>Saving happens 2 seconds after you stop typing.</span></li>
-                        <li class="d-flex gap-2 mb-2"><span class="badge text-bg-primary">Export</span><span>Use the floating export button to download all notes as Markdown.</span></li>
+                        <li class="d-flex gap-2 mb-2"><span class="badge text-bg-primary">Cross-page</span><span>Notes stay tied to the course ID <code>101</code>.</span></li>
+                        <li class="d-flex gap-2 mb-2"><span class="badge text-bg-primary">Jump back</span><span>Use the nav to hop to other pages and keep typing.</span></li>
+                        <li class="d-flex gap-2 mb-2"><span class="badge text-bg-primary">Export</span><span>Use the floating Noodle Notes button to review and export.</span></li>
                     </ul>
                 </div>
             </div>
@@ -108,83 +101,58 @@
                     <div class="card-body p-4">
                         <div class="d-flex justify-content-between align-items-start flex-wrap gap-2 mb-3">
                             <div>
-                                <p class="text-uppercase text-body-secondary small mb-1">Section 1</p>
-                                <h2 class="h4 mb-1">Welcome and Overview</h2>
-                                <p class="mb-0 text-body-secondary">Set the scene and capture quick goals for this course.</p>
+                                <p class="text-uppercase text-body-secondary small mb-1">Section 4</p>
+                                <h2 class="h4 mb-1">User Experience Foundations</h2>
+                                <p class="mb-0 text-body-secondary">Capture the UX principles that guide this product.</p>
+                            </div>
+                            <span class="badge rounded-pill text-bg-light border">12 min</span>
+                        </div>
+                        <form class="noodle" data-courseid="101" data-sectionid="ux-foundations" data-sectiontitle="User Experience Foundations">
+                            <label for="notes-ux-foundations" class="sr-only">
+                                Notes for User Experience Foundations (saved locally)
+                            </label>
+                            <textarea id="notes-ux-foundations"
+                                      class="form-control mb-1"
+                                      placeholder="Document the UX principles and examples..."
+                                      maxlength="5000"
+                                      rows="4"
+                                      autocomplete="off"
+                                      aria-describedby="notes-ux-foundations-hint"></textarea>
+
+                            <small id="notes-ux-foundations-hint" class="form-text text-muted">
+                                Your notes are saved automatically in your browser
+                            </small>
+                            <input type="hidden" name="course-name" value="Product Essentials">
+                            <button type="submit" class="btn btn-sm btn-primary">Save Notes</button>
+                        </form>
+                    </div>
+                </section>
+
+                <section class="card border-0 shadow-sm mb-4">
+                    <div class="card-body p-4">
+                        <div class="d-flex justify-content-between align-items-start flex-wrap gap-2 mb-3">
+                            <div>
+                                <p class="text-uppercase text-body-secondary small mb-1">Section 5</p>
+                                <h2 class="h4 mb-1">Delivery Playbook</h2>
+                                <p class="mb-0 text-body-secondary">Track delivery rituals, cadences, and owners.</p>
                             </div>
                             <span class="badge rounded-pill text-bg-light border">10 min</span>
                         </div>
-                        <p class="mb-4">Learn how Noodle tracks notes for each section using unique data attributes. Update the title and placeholder text to match your course tone, then drop in the script reference to enable saves and exports.</p>
-                        <form class="noodle" data-courseid="101" data-sectionid="welcome" data-sectiontitle="Welcome and Overview">
-                            <label for="notes-welcome" class="sr-only">
-                                Notes for Welcome and Overview (saved locally)
+                        <form class="noodle" data-courseid="101" data-sectionid="delivery-playbook" data-sectiontitle="Delivery Playbook">
+                            <label for="notes-delivery-playbook" class="sr-only">
+                                Notes for Delivery Playbook (saved locally)
                             </label>
-                            <textarea id="notes-welcome"
+                            <textarea id="notes-delivery-playbook"
                                       class="form-control mb-1"
-                                      placeholder="Capture your notes or learning goals..."
+                                      placeholder="Outline cadences, roles, and artifacts..."
                                       maxlength="5000"
                                       rows="4"
                                       autocomplete="off"
-                                      aria-describedby="notes-welcome-hint"></textarea>
+                                      aria-describedby="notes-delivery-playbook-hint"></textarea>
 
-                            <input type="hidden" name="course-name" value="Product Essentials">
-                            <button type="submit" class="btn btn-sm btn-primary">Save Notes</button>
-                        </form>
-                    </div>
-                </section>
-
-                <section class="card border-0 shadow-sm mb-4">
-                    <div class="card-body p-4">
-                        <div class="d-flex justify-content-between align-items-start flex-wrap gap-2 mb-3">
-                            <div>
-                                <p class="text-uppercase text-body-secondary small mb-1">Section 2</p>
-                                <h2 class="h4 mb-1">Module: Foundations</h2>
-                                <p class="mb-0 text-body-secondary">Document key concepts as you work through the basics.</p>
-                            </div>
-                            <span class="badge rounded-pill text-bg-light border">15 min</span>
-                        </div>
-                        <p class="mb-4">This module outlines a simple course structure: overview, three lessons, and a quick recap. Swap in your own headings and prompts, and Noodle keeps each section's notes separated by <code>data-sectionid</code>.</p>
-                        <form class="noodle" data-courseid="101" data-sectionid="foundations" data-sectiontitle="Module: Foundations">
-                            <label for="notes-foundations" class="sr-only">
-                                Notes for Module: Foundations (saved locally)
-                            </label>
-                            <textarea id="notes-foundations"
-                                      class="form-control mb-1"
-                                      placeholder="Jot down definitions, links, or takeaways..."
-                                      maxlength="5000"
-                                      rows="4"
-                                      autocomplete="off"
-                                      aria-describedby="notes-foundations-hint"></textarea>
-
-                            <input type="hidden" name="course-name" value="Product Essentials">
-                            <button type="submit" class="btn btn-sm btn-primary">Save Notes</button>
-                        </form>
-                    </div>
-                </section>
-
-                <section class="card border-0 shadow-sm mb-4">
-                    <div class="card-body p-4">
-                        <div class="d-flex justify-content-between align-items-start flex-wrap gap-2 mb-3">
-                            <div>
-                                <p class="text-uppercase text-body-secondary small mb-1">Section 3</p>
-                                <h2 class="h4 mb-1">Next Steps</h2>
-                                <p class="mb-0 text-body-secondary">Track follow-ups and questions before exporting.</p>
-                            </div>
-                            <span class="badge rounded-pill text-bg-light border">5 min</span>
-                        </div>
-                        <p class="mb-4">Wrap up the course with action items, links, or reminders. When you're ready, hit the export button to download all notes for this course as Markdown.</p>
-                        <form class="noodle" data-courseid="101" data-sectionid="next-steps" data-sectiontitle="Next Steps">
-                            <label for="notes-next-steps" class="sr-only">
-                                Notes for Next Steps (saved locally)
-                            </label>
-                            <textarea id="notes-next-steps"
-                                      class="form-control mb-1"
-                                      placeholder="List your follow-ups and links..."
-                                      maxlength="5000"
-                                      rows="4"
-                                      autocomplete="off"
-                                      aria-describedby="notes-next-steps-hint"></textarea>
-                            
+                            <small id="notes-delivery-playbook-hint" class="form-text text-muted">
+                                Your notes are saved automatically in your browser
+                            </small>
                             <input type="hidden" name="course-name" value="Product Essentials">
                             <button type="submit" class="btn btn-sm btn-primary">Save Notes</button>
                         </form>
@@ -194,24 +162,18 @@
             <div class="col-lg-4">
                 <aside class="card border-0 shadow-sm mb-4">
                     <div class="card-body p-4">
-                        <h2 class="h5 mb-3">Page checklist</h2>
-                        <ul class="list-group list-group-flush">
-                            <li class="list-group-item px-0">Include <code>data-courseid</code> on every form to scope exports.</li>
-                            <li class="list-group-item px-0">Use unique <code>data-sectionid</code> per section so notes stay separate.</li>
-                            <li class="list-group-item px-0">Add a hidden <code>course-name</code> input for the export filename.</li>
-                            <li class="list-group-item px-0">Load <code>noodle.js</code> after the content so it can initialize forms.</li>
+                        <h2 class="h6 mb-2">Navigate</h2>
+                        <ul class="list-unstyled mb-0">
+                            <li><a href="sample-course.html">Page 1: Overview & Foundations</a></li>
+                            <li><a href="sample-course-3.html">Page 3: Wrap-up & Exports</a></li>
                         </ul>
                     </div>
                 </aside>
                 <aside class="card border-0 shadow-sm">
                     <div class="card-body p-4">
-                        <h2 class="h6 mb-2">Need a quick start?</h2>
-                        <ol class="ps-3 mb-0">
-                            <li>Copy a section block and adjust the IDs and titles.</li>
-                            <li>Update <code>data-courseid</code> to match your LMS course.</li>
-                            <li>Drop <code>noodle.js</code> onto the page.</li>
-                            <li>Test typing, auto-save, manual save, and export.</li>
-                        </ol>
+                        <h2 class="h6 mb-2">Reminder</h2>
+                        <p class="mb-2 text-body-secondary">All sections share the same course ID (<code>101</code>), so your notes travel with you.</p>
+                        <a class="btn btn-outline-secondary btn-sm" href="sample-course-3.html">Continue to Page 3</a>
                     </div>
                 </aside>
             </div>
@@ -222,10 +184,13 @@
 <footer class="border-top py-4 mt-5 bg-body-tertiary">
     <div class="container d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3">
         <div>
-            <p class="fw-semibold mb-1">About this sample</p>
-            <p class="mb-0 text-body-secondary">This page demonstrates how Noodle note forms look and behave inside a course layout.</p>
+            <p class="fw-semibold mb-1">Product Essentials</p>
+            <p class="mb-0 text-body-secondary">Continue capturing notes across modules—Noodle keeps them tied to this course.</p>
         </div>
-        <a class="btn btn-outline-primary" href="index.html">Back to the Noodle guide</a>
+        <div class="d-flex gap-2">
+            <a class="btn btn-outline-primary" href="index.html">Back to Noodle guide</a>
+            <a class="btn btn-outline-secondary" href="sample-course.html">Go to Page 1</a>
+        </div>
     </div>
 </footer>
 
