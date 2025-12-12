@@ -63,3 +63,9 @@ A static example page (`test.html`) demonstrates how to embed lightweight learne
 | `test.html` | Sample course landing page with two noodle note forms. |
 | `noodle.js` | Vanilla JS helper that manages cookies, status messages, cross-page exports, and the floating button. |
 | `README.md` | This guide. |
+
+## Security Concerns
+
+- Notes are stored in cookies, so content is sent with every request to the host and visible to any script running on the same origin; avoid hosting on domains where other apps or untrusted scripts run.
+- Cookies are scoped to `path=/`, meaning any page on the same host can read/overwrite note cookies; scope the path to your app (e.g., `/docs`) or add a per-site prefix/salt to reduce cross-app leakage.
+- The `Secure` flag is added only when served over HTTPS; if accessed over HTTP, note cookies travel in cleartext. Serve over HTTPS exclusively or block initialization on non-HTTPS pages.
