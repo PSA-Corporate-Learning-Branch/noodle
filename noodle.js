@@ -1,3 +1,10 @@
+/*
+ * Noodle course notes helper.
+ * Origin: Noodle notes demo for course pages.
+ * Ownership: PSA Corporate Learning Branch.
+ * License: GPL.
+ * Repo: https://github.com/PSA-Corporate-Learning-Branch/noodle
+ */
 (function () {
     function escapeHtml(unsafe) {
         if (!unsafe) return "";
