@@ -488,6 +488,8 @@
     }
 
     var notesModal = null;
+    var lastNKeyTime = 0;
+    var hotkeysAttached = false;
 
     function buildNotesModal() {
         if (notesModal) {
@@ -613,11 +615,6 @@
                 overlay.style.display = "none";
             }
         });
-        document.addEventListener("keydown", function (event) {
-            if (event.key === "Escape" && overlay.style.display === "flex") {
-                overlay.style.display = "none";
-            }
-        });
         document.body.appendChild(overlay);
 
         notesModal = {
@@ -656,8 +653,11 @@
             empty.textContent = "Start typing in any note field to see it here.";
             empty.style.color = "#555";
             modal.list.appendChild(empty);
+            modal.overlay.style.display = "flex";
+            return;
         } else {
             modal.summary.textContent = "Saved sections: " + nonEmptySections.length;
+            var firstLink = null;
             for (var i = 0; i < nonEmptySections.length; i++) {
                 var section = nonEmptySections[i];
                 var card = document.createElement("div");
@@ -700,6 +700,9 @@
                     modal.overlay.style.display = "none";
                 });
                 linkWrap.appendChild(link);
+                if (!firstLink) {
+                    firstLink = link;
+                }
 
                 card.appendChild(title);
                 card.appendChild(meta);
@@ -707,8 +710,51 @@
                 card.appendChild(linkWrap);
                 modal.list.appendChild(card);
             }
+            modal.overlay.style.display = "flex";
+            if (firstLink && typeof firstLink.focus === "function") {
+                setTimeout(function () {
+                    firstLink.focus();
+                }, 0);
+            }
         }
-        modal.overlay.style.display = "flex";
+    }
+
+    function handleKeydown(event) {
+        // Close with Escape if modal is open
+        if (event.key === "Escape") {
+            if (notesModal && notesModal.overlay && notesModal.overlay.style.display === "flex") {
+                notesModal.overlay.style.display = "none";
+                event.preventDefault();
+            }
+            return;
+        }
+
+        // Double-tap "n" to open modal (ignoring modifier keys and form fields)
+        if (event.key === "n" || event.key === "N") {
+            if (event.metaKey || event.ctrlKey || event.altKey) {
+                return;
+            }
+            var target = event.target;
+            if (target && (target.tagName === "INPUT" || target.tagName === "TEXTAREA" || target.isContentEditable)) {
+                return;
+            }
+            var now = Date.now();
+            if (now - lastNKeyTime <= 400) {
+                lastNKeyTime = 0;
+                renderNotesModal();
+                event.preventDefault();
+            } else {
+                lastNKeyTime = now;
+            }
+        }
+    }
+
+    function ensureHotkeys() {
+        if (hotkeysAttached) {
+            return;
+        }
+        document.addEventListener("keydown", handleKeydown);
+        hotkeysAttached = true;
     }
 
     function createNotesButton() {
@@ -1110,5 +1156,6 @@
         if (noodleForms.length) {
             createNotesButton();
         }
+        ensureHotkeys();
     });
 })();
