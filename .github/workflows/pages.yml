@@ -28,7 +28,7 @@ jobs:
         run: |
           mkdir -p _site
           cp -r docs/* _site/
-          cp noodle.js _site/
+          npx terser@5 noodle.js -c -m -o _site/noodle.js
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
