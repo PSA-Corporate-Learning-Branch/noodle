@@ -487,6 +487,56 @@
         triggerDownload(filename, markdown);
     }
 
+    function exportNotesHtml(targetCourseId) {
+        var courseId = chooseCourseId(targetCourseId);
+        if (!courseId) {
+            alert("No notes available to export.");
+            return;
+        }
+        var courseEntry = courseRegistry[courseId];
+        var noteBundle = collectCourseNotes(courseId);
+        var sections = noteBundle.sections || [];
+        if (!sections.length) {
+            alert("Nothing to export.");
+            return;
+        }
+
+        var title = noteBundle.courseName || (courseEntry && courseEntry.courseName) || ("Course " + courseId);
+        var lines = [];
+        lines.push("<!doctype html>");
+        lines.push("<html lang=\"en\"><head><meta charset=\"utf-8\"><title>" + escapeHtml(title) + " Notes</title>");
+        lines.push("<style>");
+        lines.push("body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; color: #0f172a; background: #f8fafc; margin: 0; padding: 32px; }");
+        lines.push("h1 { margin-top: 0; }");
+        lines.push("section { background: #fff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 16px; margin-bottom: 16px; box-shadow: 0 4px 12px rgba(15,23,42,0.06); }");
+        lines.push("h2 { margin: 0 0 8px; font-size: 1.1rem; }");
+        lines.push("p.meta { margin: 0 0 12px; color: #475569; font-size: 0.9rem; }");
+        lines.push("div.content { white-space: pre-wrap; }");
+        lines.push("</style>");
+        lines.push("</head><body>");
+        lines.push("<h1>" + escapeHtml(title) + " &mdash; Notes</h1>");
+        lines.push("<p>Exported: " + escapeHtml(new Date().toLocaleString()) + "</p>");
+        for (var i = 0; i < sections.length; i++) {
+            var sec = sections[i];
+            lines.push("<section>");
+            lines.push("<h2>" + escapeHtml(sec.title || sec.id || ("Section " + (i + 1))) + "</h2>");
+            if (sec.savedAt) {
+                var formatted = formatTimestamp(sec.savedAt) || sec.savedAt;
+                lines.push("<p class=\"meta\"><em>Last saved: " + escapeHtml(formatted) + "</em></p>");
+            }
+            var content = sec.text ? escapeHtml(sec.text) : "<em>(no notes)</em>";
+            lines.push("<div class=\"content\">" + content + "</div>");
+            lines.push("</section>");
+        }
+        lines.push("</body></html>");
+
+        var fallbackName = (courseEntry && courseEntry.courseName) ? courseEntry.courseName : ("course-" + courseId);
+        var filenameBase = noteBundle.filenameBase || fallbackName;
+        var filename = sanitizeFileName(filenameBase) + "-notes.html";
+        var blob = new Blob([lines.join("\n")], { type: "text/html" });
+        triggerDownload(filename, lines.join("\n"));
+    }
+
     var notesModal = null;
     var lastNKeyTime = 0;
     var hotkeysAttached = false;
@@ -588,17 +638,32 @@
         summary.style.fontSize = "0.95rem";
         summary.style.color = "#444";
 
+        var btnWrap = document.createElement("div");
+        btnWrap.className = "d-flex gap-2";
+
         var exportBtn = document.createElement("button");
         exportBtn.type = "button";
-        exportBtn.textContent = "Export Notes";
+        exportBtn.textContent = "Export Markdown";
         exportBtn.className = "btn btn-primary btn-sm";
         exportBtn.addEventListener("click", function () {
             var courseId = exportBtn.getAttribute("data-courseid");
             exportNotes(courseId);
         });
 
+        var exportHtmlBtn = document.createElement("button");
+        exportHtmlBtn.type = "button";
+        exportHtmlBtn.textContent = "Export HTML";
+        exportHtmlBtn.className = "btn btn-outline-primary btn-sm";
+        exportHtmlBtn.addEventListener("click", function () {
+            var courseId = exportBtn.getAttribute("data-courseid");
+            exportNotesHtml(courseId);
+        });
+
+        btnWrap.appendChild(exportBtn);
+        btnWrap.appendChild(exportHtmlBtn);
+
         actions.appendChild(summary);
-        actions.appendChild(exportBtn);
+        actions.appendChild(btnWrap);
 
         var list = document.createElement("div");
         list.id = "noodle-notes-list";
@@ -628,6 +693,7 @@
             summary: summary,
             list: list,
             exportBtn: exportBtn,
+            exportHtmlBtn: exportHtmlBtn,
             container: container
         };
         return notesModal;

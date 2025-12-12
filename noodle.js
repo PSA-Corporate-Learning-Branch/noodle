@@ -504,19 +504,28 @@
         var title = noteBundle.courseName || (courseEntry && courseEntry.courseName) || ("Course " + courseId);
         var lines = [];
         lines.push("<!doctype html>");
-        lines.push("<html lang=\"en\"><head><meta charset=\"utf-8\"><title>" + escapeHtml(title) + " Notes</title></head><body>");
+        lines.push("<html lang=\"en\"><head><meta charset=\"utf-8\"><title>" + escapeHtml(title) + " Notes</title>");
+        lines.push("<style>");
+        lines.push("body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; color: #0f172a; background: #f8fafc; margin: 0; padding: 32px; }");
+        lines.push("h1 { margin-top: 0; }");
+        lines.push("section { background: #fff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 16px; margin-bottom: 16px; box-shadow: 0 4px 12px rgba(15,23,42,0.06); }");
+        lines.push("h2 { margin: 0 0 8px; font-size: 1.1rem; }");
+        lines.push("p.meta { margin: 0 0 12px; color: #475569; font-size: 0.9rem; }");
+        lines.push("div.content { white-space: pre-wrap; }");
+        lines.push("</style>");
+        lines.push("</head><body>");
         lines.push("<h1>" + escapeHtml(title) + " &mdash; Notes</h1>");
         lines.push("<p>Exported: " + escapeHtml(new Date().toLocaleString()) + "</p>");
         for (var i = 0; i < sections.length; i++) {
             var sec = sections[i];
-            lines.push("<section style=\"margin-bottom:1.5rem;\">");
+            lines.push("<section>");
             lines.push("<h2>" + escapeHtml(sec.title || sec.id || ("Section " + (i + 1))) + "</h2>");
             if (sec.savedAt) {
                 var formatted = formatTimestamp(sec.savedAt) || sec.savedAt;
-                lines.push("<p><em>Last saved: " + escapeHtml(formatted) + "</em></p>");
+                lines.push("<p class=\"meta\"><em>Last saved: " + escapeHtml(formatted) + "</em></p>");
             }
-            var content = sec.text ? escapeHtml(sec.text).replace(/\n/g, "<br>") : "<em>(no notes)</em>";
-            lines.push("<div>" + content + "</div>");
+            var content = sec.text ? escapeHtml(sec.text) : "<em>(no notes)</em>";
+            lines.push("<div class=\"content\">" + content + "</div>");
             lines.push("</section>");
         }
         lines.push("</body></html>");
