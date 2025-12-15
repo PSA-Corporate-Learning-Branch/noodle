@@ -488,6 +488,18 @@
             var heading = "## " + escapeHtml(sectionData.title || sectionData.id || ("Section " + (m + 1)));
             lines.push(heading);
             lines.push("");
+
+            // Add link to section if available
+            if (sectionData.pageUrl && sectionData.anchorId) {
+                var sectionLink = sanitizeUrl(sectionData.pageUrl) + "#" + sanitizeAnchor(sectionData.anchorId);
+                lines.push("[View section](" + sectionLink + ")");
+                lines.push("");
+            } else if (sectionData.pageUrl) {
+                var pageLink = sanitizeUrl(sectionData.pageUrl);
+                lines.push("[View page](" + pageLink + ")");
+                lines.push("");
+            }
+
             if (sectionData.savedAt) {
                 var formatted = formatTimestamp(sectionData.savedAt);
                 if (formatted) {
@@ -642,6 +654,8 @@
         lines.push("h2 { margin: 0 0 8px; font-size: 1.1rem; }");
         lines.push("p.meta { margin: 0 0 12px; color: #475569; font-size: 0.9rem; }");
         lines.push("div.content { white-space: pre-wrap; }");
+        lines.push("a { color: #2563eb; text-decoration: none; }");
+        lines.push("a:hover { text-decoration: underline; }");
         lines.push("</style>");
         lines.push("</head><body>");
         lines.push("<h1>" + escapeHtml(title) + " &mdash; Notes</h1>");
@@ -650,6 +664,16 @@
             var sec = sections[i];
             lines.push("<section>");
             lines.push("<h2>" + escapeHtml(sec.title || sec.id || ("Section " + (i + 1))) + "</h2>");
+
+            // Add link to section if available
+            if (sec.pageUrl && sec.anchorId) {
+                var sectionLink = sanitizeUrl(sec.pageUrl) + "#" + sanitizeAnchor(sec.anchorId);
+                lines.push("<p class=\"meta\"><a href=\"" + escapeHtml(sectionLink) + "\">View section</a></p>");
+            } else if (sec.pageUrl) {
+                var pageLink = sanitizeUrl(sec.pageUrl);
+                lines.push("<p class=\"meta\"><a href=\"" + escapeHtml(pageLink) + "\">View page</a></p>");
+            }
+
             if (sec.savedAt) {
                 var formatted = formatTimestamp(sec.savedAt) || sec.savedAt;
                 lines.push("<p class=\"meta\"><em>Last saved: " + escapeHtml(formatted) + "</em></p>");
