@@ -108,7 +108,7 @@
                             <li class="list-group-item px-0"><strong>Manual save:</strong> Click the "Save Notes" button to save immediately.</li>
                             <li class="list-group-item px-0">Every save records a timestamp and section order for in-page status and exports.</li>
                             <li class="list-group-item px-0">A single "Noodle Notes" button is fixed to the bottom-left corner. Click it to view all notes, sort by recently saved or course order, and export as Markdown or HTML.</li>
-                            <li class="list-group-item px-0"><strong>Course Order sorting:</strong> Automatically organizes notes across multiple pages by extracting page numbers from URLs (e.g., <code>lesson-1.html</code>, <code>lesson-2.html</code>) and preserving section order within each page.</li>
+                            <li class="list-group-item px-0"><strong>Course Order sorting:</strong> Organizes notes across multiple pages. Use optional <code>data-page-order</code> attribute to specify page sequence, or let pages without it sort alphabetically.</li>
                         </ul>
                     </div>
                 </div>
@@ -228,7 +228,13 @@
                         </ul>
                         <div class="mt-3 p-3 bg-body-secondary rounded">
                             <p class="fw-semibold mb-2 small">Course Order Sorting</p>
-                            <p class="small mb-0">The modal's "Course Order" button automatically sorts notes by page number and section position. Page numbers are extracted from filenames (e.g., <code>lesson-1.html</code> → page 1, <code>module-2.html</code> → page 2). Section order is saved automatically when notes are saved. <strong>No special markup required.</strong></p>
+                            <p class="small mb-2">The modal's "Course Order" button sorts notes by page order and section position.</p>
+                            <ul class="small mb-0 ps-3">
+                                <li><strong>Optional:</strong> <code>data-page-order</code> - Specify page order explicitly (e.g., <code>data-page-order="1"</code> for intro, <code>data-page-order="2"</code> for foundations). All forms on a page should use the same value.</li>
+                                <li>Pages <em>with</em> <code>data-page-order</code> appear first, sorted numerically.</li>
+                                <li>Pages <em>without</em> <code>data-page-order</code> appear after, sorted alphabetically by URL.</li>
+                                <li>Within each page, sections appear in document order (automatically tracked).</li>
+                            </ul>
                         </div>
                     </div>
                 </div>

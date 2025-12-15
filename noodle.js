@@ -105,31 +105,6 @@
     var courseRegistry = {};
     var noteSortPreference = "recent"; // "recent" or "course"
 
-    function getPageOrder(pageUrl) {
-        // Extract page order from URL for consistent sorting across pages
-        // Patterns supported:
-        // - "course.html" or "page.html" -> 1
-        // - "course-2.html" or "page-2.html" -> 2
-        // - "course-N.html" or "page-N.html" -> N
-        // - URLs with numbers anywhere -> extract first number
-        if (!pageUrl) return 9999;
-
-        // Get just the filename without path or query params
-        var filename = pageUrl.split('/').pop().split('?')[0].split('#')[0];
-
-        // Look for pattern: basename(-number).extension
-        // This works for: sample-course-2.html, module-3.html, lesson-10.html, etc.
-        var match = filename.match(/^([a-zA-Z-]+?)(?:-(\d+))?\.[^.]+$/);
-        if (match) {
-            // If there's a number suffix (match[2]), use it; otherwise it's page 1
-            return match[2] ? parseInt(match[2], 10) : 1;
-        }
-
-        // Fallback: try to extract any number from the filename
-        var numMatch = filename.match(/(\d+)/);
-        return numMatch ? parseInt(numMatch[0], 10) : 9999;
-    }
-
     function makeKey(courseId, sectionId) {
         var sectionKey = encodeURIComponent(sectionId);
         var courseKey = courseId ? "_" + encodeURIComponent(courseId) : "";
@@ -292,7 +267,7 @@
                     pageUrl: "",
                     anchorId: "",
                     courseOrder: -1,
-                    pageOrder: 9999
+                    pageOrder: null
                 };
                 sectionOrder.push(sectionId);
             }
@@ -303,7 +278,9 @@
                 }
                 if (entry.data.pageUrl) {
                     sections[sectionId].pageUrl = entry.data.pageUrl;
-                    sections[sectionId].pageOrder = getPageOrder(entry.data.pageUrl);
+                }
+                if (entry.data.pageOrder !== undefined && typeof entry.data.pageOrder === "number") {
+                    sections[sectionId].pageOrder = entry.data.pageOrder;
                 }
                 if (entry.data.anchorId) {
                     sections[sectionId].anchorId = entry.data.anchorId;
@@ -343,6 +320,17 @@
                 var savedAtAttr = form.getAttribute("data-savedat") || "";
                 var pageUrl = sanitizeUrl(form.getAttribute("data-pageurl")) || sanitizeUrl(window.location.href);
                 var anchorId = sanitizeAnchor((textarea && textarea.id) || form.getAttribute("data-pageanchor"));
+
+                // Get page order from form attribute (optional)
+                var pageOrderAttr = form.getAttribute("data-page-order");
+                var pageOrderNum = null;
+                if (pageOrderAttr) {
+                    var parsed = parseInt(pageOrderAttr, 10);
+                    if (!isNaN(parsed) && isFinite(parsed)) {
+                        pageOrderNum = parsed;
+                    }
+                }
+
                 if (!sections[sectionIdFromForm]) {
                     sections[sectionIdFromForm] = {
                         id: sectionIdFromForm,
@@ -352,7 +340,7 @@
                         pageUrl: pageUrl,
                         anchorId: anchorId,
                         courseOrder: j,
-                        pageOrder: getPageOrder(pageUrl)
+                        pageOrder: pageOrderNum
                     };
                     sectionOrder.push(sectionIdFromForm);
                 } else {
@@ -366,7 +354,9 @@
                     }
                     if (pageUrl) {
                         sections[sectionIdFromForm].pageUrl = pageUrl;
-                        sections[sectionIdFromForm].pageOrder = getPageOrder(pageUrl);
+                    }
+                    if (pageOrderNum !== null) {
+                        sections[sectionIdFromForm].pageOrder = pageOrderNum;
                     }
                     if (anchorId && !sections[sectionIdFromForm].anchorId) {
                         sections[sectionIdFromForm].anchorId = anchorId;
@@ -392,13 +382,35 @@
             var bSection = sections[bKey] || {};
 
             if (effectiveSortOrder === "course") {
-                // Sort by global course order: first by page, then by section order within page
-                var aPageOrder = aSection.pageOrder || 9999;
-                var bPageOrder = bSection.pageOrder || 9999;
+                // Sort by global course order: first by page order (if specified), then by section order within page
+                var aPageOrder = aSection.pageOrder;
+                var bPageOrder = bSection.pageOrder;
 
-                // First, sort by page order
-                if (aPageOrder !== bPageOrder) {
+                // Handle pages with explicit order vs. pages without
+                var aHasPageOrder = aPageOrder !== null && aPageOrder !== undefined;
+                var bHasPageOrder = bPageOrder !== null && bPageOrder !== undefined;
+
+                // If both have page order, sort by it
+                if (aHasPageOrder && bHasPageOrder && aPageOrder !== bPageOrder) {
                     return aPageOrder - bPageOrder;
+                }
+
+                // Pages with explicit order come before pages without
+                if (aHasPageOrder && !bHasPageOrder) {
+                    return -1;
+                }
+                if (!aHasPageOrder && bHasPageOrder) {
+                    return 1;
+                }
+
+                // Both don't have page order: sort alphabetically by page URL
+                if (!aHasPageOrder && !bHasPageOrder) {
+                    var aUrl = (aSection.pageUrl || "").toLowerCase();
+                    var bUrl = (bSection.pageUrl || "").toLowerCase();
+                    if (aUrl !== bUrl) {
+                        if (aUrl < bUrl) return -1;
+                        if (aUrl > bUrl) return 1;
+                    }
                 }
 
                 // Within the same page, sort by section order
@@ -1179,7 +1191,7 @@
             }
 
             // Check for unexpected keys (security audit)
-            var allowedKeys = ["text", "courseName", "savedAt", "pageUrl", "anchorId", "sectionTitle", "sectionOrder"];
+            var allowedKeys = ["text", "courseName", "savedAt", "pageUrl", "anchorId", "sectionTitle", "sectionOrder", "pageOrder"];
             var keys = Object.keys(parsed);
             for (var i = 0; i < keys.length; i++) {
                 if (allowedKeys.indexOf(keys[i]) === -1) {
@@ -1287,6 +1299,14 @@
                     cleanObj.sectionOrder = Math.max(-1, Math.min(9999, Math.floor(parsed.sectionOrder)));
                 } else {
                     console.warn("Invalid sectionOrder type:", typeof parsed.sectionOrder);
+                }
+            }
+
+            if (parsed.pageOrder !== undefined) {
+                if (typeof parsed.pageOrder === "number" && isFinite(parsed.pageOrder)) {
+                    cleanObj.pageOrder = Math.max(1, Math.min(9999, Math.floor(parsed.pageOrder)));
+                } else {
+                    console.warn("Invalid pageOrder type:", typeof parsed.pageOrder);
                 }
             }
 
@@ -1447,6 +1467,16 @@
                 sectionOrderOnPage = courseEntry.forms.indexOf(form);
             }
 
+            // Get page order from form attribute (if specified)
+            var pageOrderAttr = form.getAttribute("data-page-order");
+            var pageOrderNum = null;
+            if (pageOrderAttr) {
+                var parsedPageOrder = parseInt(pageOrderAttr, 10);
+                if (!isNaN(parsedPageOrder) && isFinite(parsedPageOrder)) {
+                    pageOrderNum = parsedPageOrder;
+                }
+            }
+
             var payload = {
                 text: validateNoteText(textarea.value || "", 5000),
                 courseName: courseNameInput ? validateAttributeValue(courseNameInput.value || "", 200) : "",
@@ -1456,6 +1486,11 @@
                 sectionTitle: sectionTitle || sectionId,
                 sectionOrder: sectionOrderOnPage
             };
+
+            // Only include pageOrder if it's explicitly set
+            if (pageOrderNum !== null) {
+                payload.pageOrder = pageOrderNum;
+            }
             var serialized;
             try {
                 serialized = encodeURIComponent(JSON.stringify(payload));

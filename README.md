@@ -19,13 +19,38 @@ A static example page (`test.html`) demonstrates how to embed lightweight learne
 
 ## Course Order Sorting
 
-The modal includes a "Sort: Course Order" toggle that automatically organizes notes across multiple pages:
+The modal includes a "Sort: Course Order" toggle that organizes notes across multiple pages:
 
-* **Page ordering:** Extracts page numbers from filenames automatically (e.g., `lesson-1.html` → page 1, `module-2.html` → page 2, `course.html` → page 1)
-* **Section ordering:** Preserves the order sections appear on each page (saved automatically when notes are saved)
-* **No special markup required:** Works with just the standard `data-courseid` and `data-sectionid` attributes
+* **Page ordering:** Use the optional `data-page-order` attribute on forms to explicitly specify page sequence
+  * Example: `data-page-order="1"` for intro page, `data-page-order="2"` for foundations page, etc.
+  * All forms on the same page should use the same `data-page-order` value
+  * Pages **with** `data-page-order` appear first, sorted numerically (1, 2, 3...)
+  * Pages **without** `data-page-order` appear after, sorted alphabetically by URL
+* **Section ordering:** Within each page, sections appear in document order (automatically tracked when notes are saved)
 
-When viewing notes on any page, "Course Order" displays all notes from page 1 first, then page 2, then page 3, etc., with sections in the order they appear on each page.
+### Example
+
+```html
+<!-- Intro.html -->
+<form class="noodle" data-courseid="101" data-sectionid="welcome" data-page-order="1">
+  <!-- ... -->
+</form>
+
+<!-- Foundations.html -->
+<form class="noodle" data-courseid="101" data-sectionid="basics" data-page-order="2">
+  <!-- ... -->
+</form>
+<form class="noodle" data-courseid="101" data-sectionid="advanced" data-page-order="2">
+  <!-- ... -->
+</form>
+
+<!-- Summary.html (no page order specified, will sort alphabetically) -->
+<form class="noodle" data-courseid="101" data-sectionid="recap">
+  <!-- ... -->
+</form>
+```
+
+Result: Intro sections → Foundations sections (basics, then advanced) → Summary sections
 
 ## Adding note forms
 
@@ -69,9 +94,10 @@ When viewing notes on any page, "Course Order" displays all notes from page 1 fi
 * **Required:** `data-sectionid` - Unique ID for each note section (e.g., `"intro"`, `"lesson-1"`). Each section persists independently.
 * **Required:** `data-courseid` - Shared across all pages in a course to group notes together.
 * **Optional:** `data-sectiontitle` - Human-readable name shown in the modal and exports.
+* **Optional:** `data-page-order` - Numeric page order for "Course Order" sorting (e.g., `"1"`, `"2"`, `"3"`). All forms on the same page should share the same value.
 * Include `noodle.js` at the bottom of any page that uses these forms (after the DOM content).
 
-**Note:** Course order sorting works automatically without any additional markup. The system extracts page numbers from URLs and saves section order when notes are saved.
+**Note:** Section order within each page is tracked automatically when notes are saved. The `data-page-order` attribute is optional but recommended for multi-page courses where you want explicit control over page sequence.
 
 ## Files
 
