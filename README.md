@@ -9,8 +9,23 @@ A static example page (`test.html`) demonstrates how to embed lightweight learne
 * `noodle.js` scans the page on `DOMContentLoaded`, restores note text from cookies, and handles both auto-save and manual save.
 * **Auto-save:** Notes are automatically saved 2 seconds after you stop typing. Status shows "Typing..." while you type, then "Notes saved successfully at..." when saved.
 * **Manual save:** You can also click the "Save Notes" button to save immediately.
-* Every save records the timestamp so learners and exports can show when each section was last updated.
-* A single "Export Notes" button is injected and fixed to the bottom-left corner. Clicking it gathers every stored note for the detected course ID(s)—even those captured on other pages—and downloads a Markdown file such as `bc-gov-essentials-notes.md`.
+* Every save records the timestamp and section order so the modal and exports can show notes in the correct sequence.
+* A single "Noodle Notes" button is fixed to the bottom-left corner. Clicking it opens a modal showing all saved notes with options to:
+  * **Sort by Recently Saved** - Shows newest notes first (default)
+  * **Sort by Course Order** - Organizes notes by page number and section position across the entire course
+  * **Export as Markdown** - Downloads a `.md` file with all notes
+  * **Export as HTML** - Downloads a styled `.html` file with all notes
+  * **Delete All** - Clears all notes for the current course
+
+## Course Order Sorting
+
+The modal includes a "Sort: Course Order" toggle that automatically organizes notes across multiple pages:
+
+* **Page ordering:** Extracts page numbers from filenames automatically (e.g., `lesson-1.html` → page 1, `module-2.html` → page 2, `course.html` → page 1)
+* **Section ordering:** Preserves the order sections appear on each page (saved automatically when notes are saved)
+* **No special markup required:** Works with just the standard `data-courseid` and `data-sectionid` attributes
+
+When viewing notes on any page, "Course Order" displays all notes from page 1 first, then page 2, then page 3, etc., with sections in the order they appear on each page.
 
 ## Adding note forms
 
@@ -51,10 +66,12 @@ A static example page (`test.html`) demonstrates how to embed lightweight learne
 
 ### Form attributes
 
-* Use unique `data-sectionid` values so each note persists independently.
-* Reuse the same `data-courseid` across a course. If you repeat a `sectionid` on another page with the same course ID, the stored note carries over.
-* Optional: Add `data-sectiontitle` to provide a human-readable section name for exports.
+* **Required:** `data-sectionid` - Unique ID for each note section (e.g., `"intro"`, `"lesson-1"`). Each section persists independently.
+* **Required:** `data-courseid` - Shared across all pages in a course to group notes together.
+* **Optional:** `data-sectiontitle` - Human-readable name shown in the modal and exports.
 * Include `noodle.js` at the bottom of any page that uses these forms (after the DOM content).
+
+**Note:** Course order sorting works automatically without any additional markup. The system extracts page numbers from URLs and saves section order when notes are saved.
 
 ## Files
 

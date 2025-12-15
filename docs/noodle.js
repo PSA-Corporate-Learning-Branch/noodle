@@ -105,6 +105,31 @@
     var courseRegistry = {};
     var noteSortPreference = "recent"; // "recent" or "course"
 
+    function getPageOrder(pageUrl) {
+        // Extract page order from URL for consistent sorting across pages
+        // Patterns supported:
+        // - "course.html" or "page.html" -> 1
+        // - "course-2.html" or "page-2.html" -> 2
+        // - "course-N.html" or "page-N.html" -> N
+        // - URLs with numbers anywhere -> extract first number
+        if (!pageUrl) return 9999;
+
+        // Get just the filename without path or query params
+        var filename = pageUrl.split('/').pop().split('?')[0].split('#')[0];
+
+        // Look for pattern: basename(-number).extension
+        // This works for: sample-course-2.html, module-3.html, lesson-10.html, etc.
+        var match = filename.match(/^([a-zA-Z-]+?)(?:-(\d+))?\.[^.]+$/);
+        if (match) {
+            // If there's a number suffix (match[2]), use it; otherwise it's page 1
+            return match[2] ? parseInt(match[2], 10) : 1;
+        }
+
+        // Fallback: try to extract any number from the filename
+        var numMatch = filename.match(/(\d+)/);
+        return numMatch ? parseInt(numMatch[0], 10) : 9999;
+    }
+
     function makeKey(courseId, sectionId) {
         var sectionKey = encodeURIComponent(sectionId);
         var courseKey = courseId ? "_" + encodeURIComponent(courseId) : "";
@@ -266,7 +291,8 @@
                     savedAt: "",
                     pageUrl: "",
                     anchorId: "",
-                    courseOrder: -1
+                    courseOrder: -1,
+                    pageOrder: 9999
                 };
                 sectionOrder.push(sectionId);
             }
@@ -277,12 +303,16 @@
                 }
                 if (entry.data.pageUrl) {
                     sections[sectionId].pageUrl = entry.data.pageUrl;
+                    sections[sectionId].pageOrder = getPageOrder(entry.data.pageUrl);
                 }
                 if (entry.data.anchorId) {
                     sections[sectionId].anchorId = entry.data.anchorId;
                 }
                 if (entry.data.sectionTitle) {
                     sections[sectionId].title = entry.data.sectionTitle;
+                }
+                if (entry.data.sectionOrder !== undefined && typeof entry.data.sectionOrder === "number") {
+                    sections[sectionId].courseOrder = entry.data.sectionOrder;
                 }
             }
             if (entry.data && entry.data.courseName && !courseName) {
@@ -321,7 +351,8 @@
                         savedAt: savedAtAttr,
                         pageUrl: pageUrl,
                         anchorId: anchorId,
-                        courseOrder: j
+                        courseOrder: j,
+                        pageOrder: getPageOrder(pageUrl)
                     };
                     sectionOrder.push(sectionIdFromForm);
                 } else {
@@ -333,8 +364,9 @@
                     if (sectionTitle) {
                         sections[sectionIdFromForm].title = sectionTitle;
                     }
-                    if (pageUrl && !sections[sectionIdFromForm].pageUrl) {
+                    if (pageUrl) {
                         sections[sectionIdFromForm].pageUrl = pageUrl;
+                        sections[sectionIdFromForm].pageOrder = getPageOrder(pageUrl);
                     }
                     if (anchorId && !sections[sectionIdFromForm].anchorId) {
                         sections[sectionIdFromForm].anchorId = anchorId;
@@ -360,15 +392,50 @@
             var bSection = sections[bKey] || {};
 
             if (effectiveSortOrder === "course") {
-                // Sort by course order (as they appear in the HTML)
-                var aOrder = aSection.courseOrder;
-                var bOrder = bSection.courseOrder;
-                if (aOrder !== -1 && bOrder !== -1) {
-                    if (aOrder !== bOrder) {
-                        return aOrder - bOrder;
+                // Sort by global course order: first by page, then by section order within page
+                var aPageOrder = aSection.pageOrder || 9999;
+                var bPageOrder = bSection.pageOrder || 9999;
+
+                // First, sort by page order
+                if (aPageOrder !== bPageOrder) {
+                    return aPageOrder - bPageOrder;
+                }
+
+                // Within the same page, sort by section order
+                var aCourseOrder = aSection.courseOrder;
+                var bCourseOrder = bSection.courseOrder;
+
+                // If both have valid section orders, use them
+                if (aCourseOrder !== -1 && bCourseOrder !== -1) {
+                    if (aCourseOrder !== bCourseOrder) {
+                        return aCourseOrder - bCourseOrder;
                     }
                 }
-                // If one or both don't have course order, fall back to alphabetical
+
+                // If one has a valid order and the other doesn't, prioritize the one with order
+                if (aCourseOrder !== -1 && bCourseOrder === -1) {
+                    return -1;
+                }
+                if (aCourseOrder === -1 && bCourseOrder !== -1) {
+                    return 1;
+                }
+
+                // If neither has section order, fall back to save time (older first)
+                if (aCourseOrder === -1 && bCourseOrder === -1) {
+                    var aTime = Date.parse(aSection.savedAt || "");
+                    var bTime = Date.parse(bSection.savedAt || "");
+                    if (!isFinite(aTime)) {
+                        aTime = 0;
+                    }
+                    if (!isFinite(bTime)) {
+                        bTime = 0;
+                    }
+                    if (aTime !== bTime) {
+                        return aTime - bTime; // Older first (ascending)
+                    }
+                }
+
+                // Final fallback: alphabetical
                 var aLabel = (aSection.title || aSection.id || "").toLowerCase();
                 var bLabel = (bSection.title || bSection.id || "").toLowerCase();
                 if (aLabel < bLabel) {
@@ -1088,7 +1155,7 @@
             }
 
             // Check for unexpected keys (security audit)
-            var allowedKeys = ["text", "courseName", "savedAt", "pageUrl", "anchorId", "sectionTitle"];
+            var allowedKeys = ["text", "courseName", "savedAt", "pageUrl", "anchorId", "sectionTitle", "sectionOrder"];
             var keys = Object.keys(parsed);
             for (var i = 0; i < keys.length; i++) {
                 if (allowedKeys.indexOf(keys[i]) === -1) {
@@ -1188,6 +1255,14 @@
                     }
                 } else {
                     console.warn("Invalid sectionTitle type:", typeof parsed.sectionTitle);
+                }
+            }
+
+            if (parsed.sectionOrder !== undefined) {
+                if (typeof parsed.sectionOrder === "number" && isFinite(parsed.sectionOrder)) {
+                    cleanObj.sectionOrder = Math.max(-1, Math.min(9999, Math.floor(parsed.sectionOrder)));
+                } else {
+                    console.warn("Invalid sectionOrder type:", typeof parsed.sectionOrder);
                 }
             }
 
@@ -1340,13 +1415,22 @@
 
         function saveNote() {
             var timestamp = new Date().toISOString();
+
+            // Calculate this section's order on the current page
+            var sectionOrderOnPage = -1;
+            var courseEntry = courseRegistry[courseId];
+            if (courseEntry && courseEntry.forms) {
+                sectionOrderOnPage = courseEntry.forms.indexOf(form);
+            }
+
             var payload = {
                 text: validateNoteText(textarea.value || "", 5000),
                 courseName: courseNameInput ? validateAttributeValue(courseNameInput.value || "", 200) : "",
                 savedAt: timestamp,
                 pageUrl: sanitizeUrl(window.location.href),
                 anchorId: sanitizeAnchor(textarea.id || ""),
-                sectionTitle: sectionTitle || sectionId
+                sectionTitle: sectionTitle || sectionId,
+                sectionOrder: sectionOrderOnPage
             };
             var serialized;
             try {

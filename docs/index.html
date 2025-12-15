@@ -106,8 +106,9 @@
                             <li class="list-group-item px-0"><code>noodle.js</code> restores note text on load, handles auto-save and manual save, and injects the floating export button.</li>
                             <li class="list-group-item px-0"><strong>Auto-save:</strong> Notes save two seconds after typing stops; status updates accordingly.</li>
                             <li class="list-group-item px-0"><strong>Manual save:</strong> Click the "Save Notes" button to save immediately.</li>
-                            <li class="list-group-item px-0">Every save records a timestamp for in-page status and exports.</li>
-                            <li class="list-group-item px-0">A single "Export Notes" button is fixed to the bottom-left corner and exports Markdown such as <code>bc-gov-essentials-notes.md</code>.</li>
+                            <li class="list-group-item px-0">Every save records a timestamp and section order for in-page status and exports.</li>
+                            <li class="list-group-item px-0">A single "Noodle Notes" button is fixed to the bottom-left corner. Click it to view all notes, sort by recently saved or course order, and export as Markdown or HTML.</li>
+                            <li class="list-group-item px-0"><strong>Course Order sorting:</strong> Automatically organizes notes across multiple pages by extracting page numbers from URLs (e.g., <code>lesson-1.html</code>, <code>lesson-2.html</code>) and preserving section order within each page.</li>
                         </ul>
                     </div>
                 </div>
@@ -220,11 +221,15 @@
                     <div class="card-body p-4">
                         <h2 class="h5 mb-3">Form attributes</h2>
                         <ul class="list-group list-group-flush">
-                            <li class="list-group-item px-0">Use unique <code>data-sectionid</code> values so each note persists independently.</li>
-                            <li class="list-group-item px-0">Reuse the same <code>data-courseid</code> across pages to share section notes.</li>
-                            <li class="list-group-item px-0">Optional: add <code>data-sectiontitle</code> for human-readable names in exports.</li>
+                            <li class="list-group-item px-0"><strong>Required:</strong> <code>data-sectionid</code> - unique ID for each note section (e.g., <code>"intro"</code>, <code>"lesson-1"</code>).</li>
+                            <li class="list-group-item px-0"><strong>Required:</strong> <code>data-courseid</code> - shared across all pages in a course to group notes together.</li>
+                            <li class="list-group-item px-0"><strong>Optional:</strong> <code>data-sectiontitle</code> - human-readable name shown in the modal and exports.</li>
                             <li class="list-group-item px-0">Include <code>noodle.js</code> at the bottom of any page that uses these forms.</li>
                         </ul>
+                        <div class="mt-3 p-3 bg-body-secondary rounded">
+                            <p class="fw-semibold mb-2 small">Course Order Sorting</p>
+                            <p class="small mb-0">The modal's "Course Order" button automatically sorts notes by page number and section position. Page numbers are extracted from filenames (e.g., <code>lesson-1.html</code> → page 1, <code>module-2.html</code> → page 2). Section order is saved automatically when notes are saved. <strong>No special markup required.</strong></p>
+                        </div>
                     </div>
                 </div>
             </div>
