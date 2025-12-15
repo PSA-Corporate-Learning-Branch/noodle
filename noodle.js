@@ -1031,6 +1031,10 @@
 
                 var linkWrap = document.createElement("div");
                 linkWrap.style.marginTop = "6px";
+                linkWrap.style.display = "flex";
+                linkWrap.style.gap = "12px";
+                linkWrap.style.alignItems = "center";
+
                 var link = document.createElement("a");
                 link.textContent = "Open section";
                 var safeUrl = sanitizeUrl(section.pageUrl) || sanitizeUrl(window.location.href) || window.location.href;
@@ -1041,11 +1045,58 @@
                 link.style.fontSize = "0.9rem";
                 link.addEventListener("click", function () {
                     modal.overlay.style.display = "none";
+                    makeBackgroundInert(false);
                 });
                 linkWrap.appendChild(link);
                 if (!firstLink) {
                     firstLink = link;
                 }
+
+                // Add delete button for this note
+                var deleteBtn = document.createElement("button");
+                deleteBtn.type = "button";
+                deleteBtn.textContent = "Delete";
+                deleteBtn.className = "btn btn-sm btn-outline-danger";
+                deleteBtn.style.fontSize = "0.85rem";
+                deleteBtn.style.padding = "2px 8px";
+                deleteBtn.setAttribute("data-sectionid", section.id);
+                deleteBtn.setAttribute("data-courseid", chosenCourseId);
+                deleteBtn.addEventListener("click", function () {
+                    var sectionIdToDelete = this.getAttribute("data-sectionid");
+                    var courseIdToDelete = this.getAttribute("data-courseid");
+                    if (!confirm("Delete notes for \"" + (section.title || section.id) + "\"? This cannot be undone.")) {
+                        return;
+                    }
+                    // Delete the cookie
+                    var cookieName = makeKey(courseIdToDelete, sectionIdToDelete);
+                    document.cookie = cookieName + "=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/; SameSite=Strict";
+
+                    // Clear the form if it exists on the current page
+                    var courseEntry = courseRegistry[courseIdToDelete];
+                    if (courseEntry && courseEntry.forms) {
+                        for (var j = 0; j < courseEntry.forms.length; j++) {
+                            var form = courseEntry.forms[j];
+                            if (!form) continue;
+                            var formSectionId = validateId(form.getAttribute("data-sectionid"), 100);
+                            if (formSectionId === sectionIdToDelete) {
+                                var textarea = form.querySelector("textarea");
+                                if (textarea) {
+                                    textarea.value = "";
+                                }
+                                form.removeAttribute("data-savedat");
+                                var statusEl = form.querySelector(".noodle-status");
+                                if (statusEl) {
+                                    statusEl.textContent = "";
+                                }
+                                break;
+                            }
+                        }
+                    }
+
+                    // Refresh the modal
+                    renderNotesModal(courseIdToDelete);
+                });
+                linkWrap.appendChild(deleteBtn);
 
                 card.appendChild(title);
                 card.appendChild(meta);
