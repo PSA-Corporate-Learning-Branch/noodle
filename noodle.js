@@ -649,6 +649,10 @@
         });
         closeBtn.addEventListener("click", function () {
             overlay.style.display = "none";
+            makeBackgroundInert(false);
+            if (lastTriggerButton && typeof lastTriggerButton.focus === "function") {
+                lastTriggerButton.focus();
+            }
         });
 
         header.appendChild(titleWrap);
