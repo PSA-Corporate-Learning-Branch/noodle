@@ -103,6 +103,7 @@
     }
 
     var courseRegistry = {};
+    var noteSortPreference = "recent"; // "recent" or "course"
 
     function makeKey(courseId, sectionId) {
         var sectionKey = encodeURIComponent(sectionId);
@@ -114,7 +115,8 @@
         if (!courseRegistry[courseId]) {
             courseRegistry[courseId] = {
                 forms: [],
-                courseName: ""
+                courseName: "",
+                sectionOrder: []
             };
         }
         return courseRegistry[courseId];
@@ -242,7 +244,7 @@
         return entries;
     }
 
-    function collectCourseNotes(courseId) {
+    function collectCourseNotes(courseId, sortOrder) {
         var sections = {};
         var sectionOrder = [];
         var allCookies = getAllNoodleCookies();
@@ -263,7 +265,8 @@
                     text: "",
                     savedAt: "",
                     pageUrl: "",
-                    anchorId: ""
+                    anchorId: "",
+                    courseOrder: -1
                 };
                 sectionOrder.push(sectionId);
             }
@@ -317,11 +320,13 @@
                         text: noteText,
                         savedAt: savedAtAttr,
                         pageUrl: pageUrl,
-                        anchorId: anchorId
+                        anchorId: anchorId,
+                        courseOrder: j
                     };
                     sectionOrder.push(sectionIdFromForm);
                 } else {
                     sections[sectionIdFromForm].text = noteText;
+                    sections[sectionIdFromForm].courseOrder = j;
                     if (savedAtAttr) {
                         sections[sectionIdFromForm].savedAt = savedAtAttr;
                     }
@@ -347,29 +352,55 @@
                 uniqueOrder.push(key);
             }
         }
+
+        // Sort based on preference: "recent" or "course"
+        var effectiveSortOrder = sortOrder || noteSortPreference;
         uniqueOrder.sort(function (aKey, bKey) {
             var aSection = sections[aKey] || {};
             var bSection = sections[bKey] || {};
-            var aTime = Date.parse(aSection.savedAt || "");
-            var bTime = Date.parse(bSection.savedAt || "");
-            if (!isFinite(aTime)) {
-                aTime = 0;
+
+            if (effectiveSortOrder === "course") {
+                // Sort by course order (as they appear in the HTML)
+                var aOrder = aSection.courseOrder;
+                var bOrder = bSection.courseOrder;
+                if (aOrder !== -1 && bOrder !== -1) {
+                    if (aOrder !== bOrder) {
+                        return aOrder - bOrder;
+                    }
+                }
+                // If one or both don't have course order, fall back to alphabetical
+                var aLabel = (aSection.title || aSection.id || "").toLowerCase();
+                var bLabel = (bSection.title || bSection.id || "").toLowerCase();
+                if (aLabel < bLabel) {
+                    return -1;
+                }
+                if (aLabel > bLabel) {
+                    return 1;
+                }
+                return 0;
+            } else {
+                // Sort by most recent save time (default)
+                var aTime = Date.parse(aSection.savedAt || "");
+                var bTime = Date.parse(bSection.savedAt || "");
+                if (!isFinite(aTime)) {
+                    aTime = 0;
+                }
+                if (!isFinite(bTime)) {
+                    bTime = 0;
+                }
+                if (aTime !== bTime) {
+                    return bTime - aTime;
+                }
+                var aLabel = (aSection.title || aSection.id || "").toLowerCase();
+                var bLabel = (bSection.title || bSection.id || "").toLowerCase();
+                if (aLabel < bLabel) {
+                    return -1;
+                }
+                if (aLabel > bLabel) {
+                    return 1;
+                }
+                return 0;
             }
-            if (!isFinite(bTime)) {
-                bTime = 0;
-            }
-            if (aTime !== bTime) {
-                return bTime - aTime;
-            }
-            var aLabel = (aSection.title || aSection.id || "").toLowerCase();
-            var bLabel = (bSection.title || bSection.id || "").toLowerCase();
-            if (aLabel < bLabel) {
-                return -1;
-            }
-            if (aLabel > bLabel) {
-                return 1;
-            }
-            return 0;
         });
 
         if (!uniqueOrder.length) {
@@ -649,6 +680,10 @@
         });
         closeBtn.addEventListener("click", function () {
             overlay.style.display = "none";
+            makeBackgroundInert(false);
+            if (lastTriggerButton && typeof lastTriggerButton.focus === "function") {
+                lastTriggerButton.focus();
+            }
         });
 
         header.appendChild(titleWrap);
@@ -665,10 +700,28 @@
         actions.style.alignItems = "center";
         actions.style.marginBottom = "12px";
 
+        var leftSection = document.createElement("div");
+        leftSection.style.display = "flex";
+        leftSection.style.flexDirection = "column";
+        leftSection.style.gap = "8px";
+
         var summary = document.createElement("div");
         summary.id = "noodle-notes-summary";
         summary.style.fontSize = "0.95rem";
         summary.style.color = "#444";
+
+        var sortToggle = document.createElement("button");
+        sortToggle.type = "button";
+        sortToggle.id = "noodle-sort-toggle";
+        sortToggle.className = "btn btn-sm btn-outline-secondary";
+        sortToggle.style.fontSize = "0.85rem";
+        sortToggle.style.padding = "4px 10px";
+        sortToggle.style.width = "fit-content";
+        sortToggle.innerHTML = noteSortPreference === "course" ? "Sort: Course Order ↓" : "Sort: Recently Saved ↓";
+        sortToggle.setAttribute("aria-label", "Toggle sort order");
+
+        leftSection.appendChild(summary);
+        leftSection.appendChild(sortToggle);
 
         var btnWrap = document.createElement("div");
         btnWrap.className = "d-flex gap-2";
@@ -712,7 +765,7 @@
         btnWrap.appendChild(exportHtmlBtn);
         btnWrap.appendChild(deleteBtn);
 
-        actions.appendChild(summary);
+        actions.appendChild(leftSection);
         actions.appendChild(btnWrap);
 
         var list = document.createElement("div");
@@ -745,7 +798,8 @@
             exportBtn: exportBtn,
             exportHtmlBtn: exportHtmlBtn,
             deleteBtn: deleteBtn,
-            container: container
+            container: container,
+            sortToggle: sortToggle
         };
         return notesModal;
     }
@@ -809,6 +863,19 @@
         modal.exportBtn.setAttribute("data-courseid", chosenCourseId);
         modal.subtitle.textContent = bundle.courseName ? bundle.courseName + " (" + chosenCourseId + ")" : "Course " + chosenCourseId;
         modal.list.innerHTML = "";
+
+        // Update sort toggle button text
+        modal.sortToggle.innerHTML = noteSortPreference === "course" ? "Sort: Course Order ↓" : "Sort: Recently Saved ↓";
+
+        // Remove existing click listener (if any) and add new one
+        var newSortToggle = modal.sortToggle.cloneNode(true);
+        modal.sortToggle.parentNode.replaceChild(newSortToggle, modal.sortToggle);
+        modal.sortToggle = newSortToggle;
+
+        modal.sortToggle.addEventListener("click", function () {
+            noteSortPreference = noteSortPreference === "recent" ? "course" : "recent";
+            renderNotesModal(chosenCourseId);
+        });
 
         var nonEmptySections = [];
         for (var s = 0; s < bundle.sections.length; s++) {
