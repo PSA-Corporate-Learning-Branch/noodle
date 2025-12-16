@@ -67,11 +67,7 @@ Result: Intro sections → Foundations sections (basics, then advanced) → Summ
               placeholder="Capture your notes…"
               maxlength="5000"
               rows="4"
-              autocomplete="off"
-              aria-describedby="notes-section1-hint"></textarea>
-    <small id="notes-section1-hint" class="form-text text-muted">
-        Your notes are saved automatically in your browser
-    </small>
+              autocomplete="off"></textarea>
     <input type="hidden" name="course-name" value="B.C. Provincial Government Essentials">
     <button type="submit" class="btn btn-sm btn-primary">
         Save Notes

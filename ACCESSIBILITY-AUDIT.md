@@ -84,11 +84,7 @@ Textareas in noodle forms have no associated `<label>` elements. Screen reader u
     <label for="notes-section1" class="sr-only">Notes for Section 1: Crown Government Structure in Canada</label>
     <textarea id="notes-section1"
               placeholder="Type your thoughts..."
-              class="form-control"
-              aria-describedby="notes-section1-hint"></textarea>
-    <small id="notes-section1-hint" class="form-text text-muted">
-        Your notes are saved locally in your browser
-    </small>
+              class="form-control"></textarea>
     <input type="hidden" name="course-name" value="B.C. Provincial Government Essentials">
     <button class="btn btn-sm btn-primary">Save Notes</button>
 </form>
@@ -922,10 +918,7 @@ textarea::placeholder {
                   maxlength="5000"
                   rows="4"
                   autocomplete="off"
-                  aria-describedby="notes-section1-hint notes-section1-counter"></textarea>
-        <small id="notes-section1-hint" class="form-text text-muted">
-            Your notes are saved automatically in your browser
-        </small>
+                  aria-describedby="notes-section1-counter"></textarea>
         <div id="notes-section1-counter"
              class="character-counter text-muted small"
              aria-live="polite">
