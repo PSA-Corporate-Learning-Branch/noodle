@@ -1,6 +1,6 @@
 # Noodle Course Notes Demo
 
-A static example page (`test.html`) demonstrates how to embed lightweight learner note fields inside course content (e.g., Moodle). Every note form is stored entirely in the browser via cookies so learners keep their notes even if Moodle clears `localStorage` on logout. A floating **Export Notes** button lets them download all notes for the current course as a Markdown file.
+Noodle lets you embed lightweight note-taking fields into any web page, storing content in cookies rather than `localStorage`. This makes it ideal for environments where `localStorage` is unreliable—such as Moodle, which clears `localStorage` on logout. A floating **Noodle Notes** button gives users quick access to view, sort, and export all their notes as Markdown or HTML.
 
 ## How it works
 
