@@ -57,7 +57,7 @@ Result: Intro sections → Foundations sections (basics, then advanced) → Summ
 ### Basic accessible form structure
 
 ```html
-<form class="noodle" data-courseid="86" data-sectionid="section1" data-sectiontitle="Introduction">
+<form class="noodle" data-courseid="86" data-sectionid="section1" data-sectiontitle="Introduction" data-page-order="1">
     <label for="notes-section1" class="sr-only">
         Notes for Section 1: Introduction
         <span class="sr-only">(saved locally in your browser)</span>

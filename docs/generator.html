@@ -74,6 +74,7 @@
                     <ul class="list-unstyled mb-0">
                         <li class="d-flex align-items-start gap-2"><span class="badge text-bg-primary">Forms</span><span>Accessible form markup with labels, hints, and <code>data-courseid</code>/<code>data-sectionid</code>.</span></li>
                         <li class="d-flex align-items-start gap-2"><span class="badge text-bg-primary">Hidden course name</span><span>Automatically inserted <code>course-name</code> input for exports.</span></li>
+                        <li class="d-flex align-items-start gap-2"><span class="badge text-bg-primary">Page order</span><span>Optional <code>data-page-order</code> for multi-page course sorting.</span></li>
                         <li class="d-flex align-items-start gap-2"><span class="badge text-bg-primary">One copy</span><span>Paste the snippet into your course page and include <code>noodle.js</code> once.</span></li>
                     </ul>
                 </div>
@@ -100,14 +101,19 @@
                     <button class="btn btn-outline-secondary btn-sm" id="add-section-btn" type="button">Add section</button>
                 </div>
                 <div class="row g-3 mb-3">
-                    <div class="col-md-6">
+                    <div class="col-md-4">
                         <label class="form-label fw-semibold" for="course-id">Course ID (required)</label>
                         <input type="text" class="form-control" id="course-id" placeholder="e.g., 101 or bc-gov-essentials" required>
                         <small class="text-body-secondary">Allowed: letters, numbers, hyphens, underscores.</small>
                     </div>
-                    <div class="col-md-6">
+                    <div class="col-md-4">
                         <label class="form-label fw-semibold" for="course-name">Course name (required)</label>
                         <input type="text" class="form-control" id="course-name" placeholder="e.g., Product Essentials" required>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label fw-semibold" for="page-order">Page order (optional)</label>
+                        <input type="number" class="form-control" id="page-order" placeholder="e.g., 1, 2, 3" min="1">
+                        <small class="text-body-secondary">Controls sort order in Course Order view.</small>
                     </div>
                 </div>
                 <div id="sections-container" class="row g-3"></div>
@@ -194,6 +200,7 @@
         const statusText = document.getElementById('status-text');
         const courseIdInput = document.getElementById('course-id');
         const courseNameInput = document.getElementById('course-name');
+        const pageOrderInput = document.getElementById('page-order');
 
         const allowedIdPattern = /[^a-zA-Z0-9_-]/g;
 
@@ -266,6 +273,7 @@
         function buildSnippet() {
             const courseId = slugifyId(courseIdInput.value, '').substring(0, 100);
             const courseName = courseNameInput.value.trim().substring(0, 200);
+            const pageOrder = pageOrderInput.value.trim();
 
             const sections = Array.from(sectionsContainer.querySelectorAll('.border.rounded-3')).map((section, idx) => {
                 const titleValue = section.querySelector('.section-title').value.trim();
@@ -280,8 +288,9 @@
             });
 
             const lines = [];
+            const pageOrderAttr = pageOrder ? ` data-page-order="${pageOrder}"` : '';
             sections.forEach(section => {
-                lines.push(`<form class="noodle" data-courseid="${courseId}" data-sectionid="${section.sectionId}" data-sectiontitle="${section.title}">`);
+                lines.push(`<form class="noodle" data-courseid="${courseId}" data-sectionid="${section.sectionId}" data-sectiontitle="${section.title}"${pageOrderAttr}>`);
                 lines.push(`    <label for="${section.textareaId}" class="sr-only">`);
                 lines.push(`        Notes for ${section.title} (saved locally)`);
                 lines.push(`    </label>`);
