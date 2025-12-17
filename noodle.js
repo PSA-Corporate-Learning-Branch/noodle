@@ -58,6 +58,190 @@
         return str;
     }
 
+    // ========== Minimal Store-Only ZIP Implementation ==========
+    // Creates uncompressed ZIP files for DOCX export without external dependencies
+
+    var CRC32_TABLE = (function () {
+        var table = [];
+        for (var n = 0; n < 256; n++) {
+            var c = n;
+            for (var k = 0; k < 8; k++) {
+                c = (c & 1) ? (0xEDB88320 ^ (c >>> 1)) : (c >>> 1);
+            }
+            table[n] = c >>> 0;
+        }
+        return table;
+    })();
+
+    function crc32(data) {
+        var crc = 0xFFFFFFFF;
+        for (var i = 0; i < data.length; i++) {
+            crc = CRC32_TABLE[(crc ^ data[i]) & 0xFF] ^ (crc >>> 8);
+        }
+        return (crc ^ 0xFFFFFFFF) >>> 0;
+    }
+
+    function stringToBytes(str) {
+        var bytes = [];
+        for (var i = 0; i < str.length; i++) {
+            var code = str.charCodeAt(i);
+            if (code < 128) {
+                bytes.push(code);
+            } else if (code < 2048) {
+                bytes.push(192 | (code >> 6), 128 | (code & 63));
+            } else if (code < 65536) {
+                bytes.push(224 | (code >> 12), 128 | ((code >> 6) & 63), 128 | (code & 63));
+            } else {
+                bytes.push(240 | (code >> 18), 128 | ((code >> 12) & 63), 128 | ((code >> 6) & 63), 128 | (code & 63));
+            }
+        }
+        return new Uint8Array(bytes);
+    }
+
+    function createZip(files) {
+        // files is an object: { "path/to/file.txt": "content string", ... }
+        var fileEntries = [];
+        var centralDir = [];
+        var offset = 0;
+
+        var paths = Object.keys(files);
+        for (var i = 0; i < paths.length; i++) {
+            var path = paths[i];
+            var content = stringToBytes(files[path]);
+            var pathBytes = stringToBytes(path);
+            var crc = crc32(content);
+
+            // Local file header
+            var localHeader = new Uint8Array(30 + pathBytes.length);
+            var view = new DataView(localHeader.buffer);
+            view.setUint32(0, 0x04034B50, true);  // Local file header signature
+            view.setUint16(4, 20, true);          // Version needed to extract
+            view.setUint16(6, 0x0800, true);      // General purpose bit flag (UTF-8)
+            view.setUint16(8, 0, true);           // Compression method (store)
+            view.setUint16(10, 0, true);          // File last mod time
+            view.setUint16(12, 0, true);          // File last mod date
+            view.setUint32(14, crc, true);        // CRC-32
+            view.setUint32(18, content.length, true);  // Compressed size
+            view.setUint32(22, content.length, true);  // Uncompressed size
+            view.setUint16(26, pathBytes.length, true); // File name length
+            view.setUint16(28, 0, true);          // Extra field length
+            localHeader.set(pathBytes, 30);
+
+            fileEntries.push({ header: localHeader, content: content, offset: offset });
+
+            // Central directory entry
+            var centralEntry = new Uint8Array(46 + pathBytes.length);
+            var cView = new DataView(centralEntry.buffer);
+            cView.setUint32(0, 0x02014B50, true);  // Central directory signature
+            cView.setUint16(4, 20, true);          // Version made by
+            cView.setUint16(6, 20, true);          // Version needed to extract
+            cView.setUint16(8, 0x0800, true);      // General purpose bit flag (UTF-8)
+            cView.setUint16(10, 0, true);          // Compression method (store)
+            cView.setUint16(12, 0, true);          // File last mod time
+            cView.setUint16(14, 0, true);          // File last mod date
+            cView.setUint32(16, crc, true);        // CRC-32
+            cView.setUint32(20, content.length, true);  // Compressed size
+            cView.setUint32(24, content.length, true);  // Uncompressed size
+            cView.setUint16(28, pathBytes.length, true); // File name length
+            cView.setUint16(30, 0, true);          // Extra field length
+            cView.setUint16(32, 0, true);          // File comment length
+            cView.setUint16(34, 0, true);          // Disk number start
+            cView.setUint16(36, 0, true);          // Internal file attributes
+            cView.setUint32(38, 0, true);          // External file attributes
+            cView.setUint32(42, offset, true);     // Relative offset of local header
+            centralEntry.set(pathBytes, 46);
+            centralDir.push(centralEntry);
+
+            offset += localHeader.length + content.length;
+        }
+
+        // End of central directory record
+        var centralDirSize = 0;
+        for (var j = 0; j < centralDir.length; j++) {
+            centralDirSize += centralDir[j].length;
+        }
+
+        var endRecord = new Uint8Array(22);
+        var eView = new DataView(endRecord.buffer);
+        eView.setUint32(0, 0x06054B50, true);      // End of central dir signature
+        eView.setUint16(4, 0, true);               // Number of this disk
+        eView.setUint16(6, 0, true);               // Disk where central dir starts
+        eView.setUint16(8, paths.length, true);    // Number of central dir records on this disk
+        eView.setUint16(10, paths.length, true);   // Total number of central dir records
+        eView.setUint32(12, centralDirSize, true); // Size of central directory
+        eView.setUint32(16, offset, true);         // Offset of start of central directory
+        eView.setUint16(20, 0, true);              // Comment length
+
+        // Combine all parts
+        var totalSize = offset + centralDirSize + 22;
+        var zip = new Uint8Array(totalSize);
+        var pos = 0;
+
+        for (var k = 0; k < fileEntries.length; k++) {
+            zip.set(fileEntries[k].header, pos);
+            pos += fileEntries[k].header.length;
+            zip.set(fileEntries[k].content, pos);
+            pos += fileEntries[k].content.length;
+        }
+        for (var m = 0; m < centralDir.length; m++) {
+            zip.set(centralDir[m], pos);
+            pos += centralDir[m].length;
+        }
+        zip.set(endRecord, pos);
+
+        return zip;
+    }
+
+    // ========== DOCX Template Strings ==========
+
+    var DOCX_CONTENT_TYPES = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/><Override PartName="/word/afchunk.mht" ContentType="message/rfc822"/></Types>';
+
+    var DOCX_RELS = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="/word/document.xml" Id="rId1"/></Relationships>';
+
+    var DOCX_DOCUMENT_RELS = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/aFChunk" Target="/word/afchunk.mht" Id="htmlChunk"/></Relationships>';
+
+    function createDocxDocument(width, height, orient, margins) {
+        return '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n' +
+            '<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">' +
+            '<w:body><w:altChunk r:id="htmlChunk"/><w:sectPr>' +
+            '<w:pgSz w:w="' + width + '" w:h="' + height + '" w:orient="' + orient + '"/>' +
+            '<w:pgMar w:top="' + margins.top + '" w:right="' + margins.right + '" w:bottom="' + margins.bottom + '" w:left="' + margins.left + '" w:header="720" w:footer="720" w:gutter="0"/>' +
+            '</w:sectPr></w:body></w:document>';
+    }
+
+    function createMhtDocument(htmlContent) {
+        // Encode = as =3D for quoted-printable
+        var encoded = htmlContent.replace(/=/g, "=3D");
+        return 'MIME-Version: 1.0\r\n' +
+            'Content-Type: multipart/related; type="text/html"; boundary="----=mhtDocumentPart"\r\n\r\n' +
+            '------=mhtDocumentPart\r\n' +
+            'Content-Type: text/html; charset="utf-8"\r\n' +
+            'Content-Transfer-Encoding: quoted-printable\r\n' +
+            'Content-Location: file:///C:/fake/document.html\r\n\r\n' +
+            encoded + '\r\n' +
+            '------=mhtDocumentPart--\r\n';
+    }
+
+    function createDocxBlob(htmlContent) {
+        // Letter size: 8.5" x 11" in twips (1 inch = 1440 twips)
+        var width = 12240;   // 8.5 inches
+        var height = 15840;  // 11 inches
+        var margins = { top: 1440, right: 1440, bottom: 1440, left: 1440 };
+
+        var files = {
+            "[Content_Types].xml": DOCX_CONTENT_TYPES,
+            "_rels/.rels": DOCX_RELS,
+            "word/_rels/document.xml.rels": DOCX_DOCUMENT_RELS,
+            "word/document.xml": createDocxDocument(width, height, "portrait", margins),
+            "word/afchunk.mht": createMhtDocument(htmlContent)
+        };
+
+        var zipData = createZip(files);
+        return new Blob([zipData], { type: "application/vnd.openxmlformats-officedocument.wordprocessingml.document" });
+    }
+
+    // ========== End DOCX Implementation ==========
+
     function setCookie(name, value, days) {
         var expires = "";
         if (days) {
@@ -703,6 +887,63 @@
         triggerDownload(filename, lines.join("\n"));
     }
 
+    function exportNotesDocx(targetCourseId) {
+        var courseId = chooseCourseId(targetCourseId);
+        if (!courseId) {
+            alert("No notes available to export.");
+            return;
+        }
+        var courseEntry = courseRegistry[courseId];
+        var noteBundle = collectCourseNotes(courseId);
+        var sections = noteBundle.sections || [];
+        if (!sections.length) {
+            alert("Nothing to export.");
+            return;
+        }
+
+        var title = noteBundle.courseName || (courseEntry && courseEntry.courseName) || ("Course " + courseId);
+        var lines = [];
+        lines.push("<!doctype html>");
+        lines.push("<html lang=\"en\"><head><meta charset=\"utf-8\"><title>" + escapeHtml(title) + " Notes</title>");
+        lines.push("<style>");
+        lines.push("body { font-family: Calibri, Arial, sans-serif; color: #000; margin: 0; padding: 0; }");
+        lines.push("h1 { margin-top: 0; font-size: 24pt; }");
+        lines.push("h2 { margin: 18pt 0 6pt; font-size: 14pt; border-bottom: 1px solid #ccc; padding-bottom: 4pt; }");
+        lines.push("p.meta { margin: 0 0 6pt; color: #666; font-size: 10pt; }");
+        lines.push("div.content { white-space: pre-wrap; margin-bottom: 12pt; }");
+        lines.push("</style>");
+        lines.push("</head><body>");
+        lines.push("<h1>" + escapeHtml(title) + " &mdash; Notes</h1>");
+        lines.push("<p>Exported: " + escapeHtml(new Date().toLocaleString()) + "</p>");
+        for (var i = 0; i < sections.length; i++) {
+            var sec = sections[i];
+            lines.push("<h2>" + escapeHtml(sec.title || sec.id || ("Section " + (i + 1))) + "</h2>");
+            if (sec.savedAt) {
+                var formatted = formatTimestamp(sec.savedAt) || sec.savedAt;
+                lines.push("<p class=\"meta\"><em>Last saved: " + escapeHtml(formatted) + "</em></p>");
+            }
+            var content = sec.text ? escapeHtml(sec.text) : "<em>(no notes)</em>";
+            lines.push("<div class=\"content\">" + content + "</div>");
+        }
+        lines.push("</body></html>");
+
+        var htmlContent = lines.join("\n");
+        var blob = createDocxBlob(htmlContent);
+
+        var fallbackName = (courseEntry && courseEntry.courseName) ? courseEntry.courseName : ("course-" + courseId);
+        var filenameBase = noteBundle.filenameBase || fallbackName;
+        var filename = sanitizeFileName(filenameBase) + "-notes.docx";
+
+        var url = URL.createObjectURL(blob);
+        var link = document.createElement("a");
+        link.href = url;
+        link.download = filename;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+    }
+
     var notesModal = null;
     var lastNKeyTime = 0;
     var hotkeysAttached = false;
@@ -847,6 +1088,15 @@
             exportNotesHtml(courseId);
         });
 
+        var exportDocxBtn = document.createElement("button");
+        exportDocxBtn.type = "button";
+        exportDocxBtn.textContent = "Export Word";
+        exportDocxBtn.className = "btn btn-outline-primary btn-sm";
+        exportDocxBtn.addEventListener("click", function () {
+            var courseId = exportBtn.getAttribute("data-courseid");
+            exportNotesDocx(courseId);
+        });
+
         var deleteBtn = document.createElement("button");
         deleteBtn.type = "button";
         deleteBtn.textContent = "Delete All";
@@ -866,6 +1116,7 @@
 
         btnWrap.appendChild(exportBtn);
         btnWrap.appendChild(exportHtmlBtn);
+        btnWrap.appendChild(exportDocxBtn);
         btnWrap.appendChild(deleteBtn);
 
         actions.appendChild(leftSection);
