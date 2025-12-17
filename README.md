@@ -1,6 +1,6 @@
 # Noodle Course Notes Demo
 
-Noodle lets you embed lightweight note-taking fields into any web page, storing content in cookies rather than `localStorage`. This makes it ideal for environments where `localStorage` is unreliable—such as Moodle, which clears `localStorage` on logout. A floating **Noodle Notes** button gives users quick access to view, sort, and export all their notes as Markdown or HTML.
+Noodle lets you embed lightweight note-taking fields into any web page, storing content in cookies rather than `localStorage`. This makes it ideal for environments where `localStorage` is unreliable—such as Moodle, which clears `localStorage` on logout. A floating **Noodle Notes** button gives users quick access to view, sort, and export all their notes as Markdown, HTML, or Word.
 
 ## How it works
 
@@ -15,6 +15,7 @@ Noodle lets you embed lightweight note-taking fields into any web page, storing 
   * **Sort by Course Order** - Organizes notes by page number and section position across the entire course
   * **Export as Markdown** - Downloads a `.md` file with all notes
   * **Export as HTML** - Downloads a styled `.html` file with all notes
+  * **Export as Word** - Downloads a `.docx` file compatible with Microsoft Word, LibreOffice, and Google Docs
   * **Delete All** - Clears all notes for the current course
 
 ## Course Order Sorting
@@ -100,7 +101,7 @@ Result: Intro sections → Foundations sections (basics, then advanced) → Summ
 | File | Description |
 | --- | --- |
 | `test.html` | Sample course landing page with two noodle note forms. |
-| `noodle.js` | Vanilla JS helper that manages cookies, status messages, cross-page exports, and the floating button. |
+| `noodle.js` | Vanilla JS helper that manages cookies, status messages, cross-page exports (Markdown, HTML, Word), and the floating button. |
 | `README.md` | This guide. |
 
 ## Security Concerns
