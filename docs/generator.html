@@ -210,6 +210,16 @@
             return cleaned || fallback;
         }
 
+        function escapeHtml(str) {
+            if (!str) return '';
+            return String(str)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#039;');
+        }
+
         function createSectionRow(index) {
             const col = document.createElement('div');
             col.className = 'col-12';
@@ -288,11 +298,14 @@
             });
 
             const lines = [];
-            const pageOrderAttr = pageOrder ? ` data-page-order="${pageOrder}"` : '';
+            const safePageOrder = escapeHtml(pageOrder);
+            const pageOrderAttr = pageOrder ? ` data-page-order="${safePageOrder}"` : '';
+            const safeCourseName = escapeHtml(courseName);
             sections.forEach(section => {
-                lines.push(`<form class="noodle" data-courseid="${courseId}" data-sectionid="${section.sectionId}" data-sectiontitle="${section.title}"${pageOrderAttr}>`);
+                const safeTitle = escapeHtml(section.title);
+                lines.push(`<form class="noodle" data-courseid="${courseId}" data-sectionid="${section.sectionId}" data-sectiontitle="${safeTitle}"${pageOrderAttr}>`);
                 lines.push(`    <label for="${section.textareaId}" class="sr-only">`);
-                lines.push(`        Notes for ${section.title} (saved locally)`);
+                lines.push(`        Notes for ${safeTitle} (saved locally)`);
                 lines.push(`    </label>`);
                 lines.push(`    <textarea id="${section.textareaId}"`);
                 lines.push(`              class="form-control mb-1"`);
@@ -304,7 +317,7 @@
                 lines.push(`    <small id="${section.textareaId}-hint" class="form-text text-muted">`);
                 lines.push(`        Your notes are saved automatically in your browser`);
                 lines.push(`    </small>`);
-                lines.push(`    <input type="hidden" name="course-name" value="${courseName}">`);
+                lines.push(`    <input type="hidden" name="course-name" value="${safeCourseName}">`);
                 lines.push(`    <button type="submit" class="btn btn-sm btn-primary">Save Notes</button>`);
                 lines.push(`</form>`);
                 lines.push('');
