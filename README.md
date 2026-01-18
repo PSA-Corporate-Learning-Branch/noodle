@@ -1,6 +1,6 @@
-# Noodle Course Notes Demo
+# Noodle Notes Demo
 
-Noodle lets you embed lightweight note-taking fields into any web page, storing content in cookies rather than `localStorage`. This makes it ideal for environments where `localStorage` is unreliable—such as Moodle, which clears `localStorage` on logout. A floating **Noodle Notes** button gives users quick access to view, sort, and export all their notes as Markdown, HTML, or Word.
+Noodle Notes lets you embed lightweight note-taking fields into any web page, storing content in cookies rather than `localStorage`. This makes it ideal for environments where `localStorage` is unreliable—such as Moodle, which clears `localStorage` on logout. A floating **Noodle Notes** button gives users quick access to view, sort, and export all their notes as Markdown, HTML, or Word.
 
 ## How it works
 
